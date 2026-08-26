@@ -9,16 +9,23 @@
 --4.關閉偵測：查詢完畢後，在主控台輸入 testWatcher:stop() 即可關閉這個臨時偵測器。
 
 local EISUU_KEY = 102
-local KANA_KEY = 104  
-local LSHIFT_KEY = 56 
-local LCMD_KEY = 55    
-local RCMD_KEY = 54    
-local LALT_KEY = 58    -- Left Option (Alt) 鍵碼
-local RALT_KEY = 61    -- Right Option (Alt) 鍵碼
-local YEN_KEY = 93     -- JIS 鍵盤右上角 ¥ 鍵
-
+local KANA_KEY = 104
+local LSHIFT_KEY = 56
+local LCMD_KEY = 55
+local RCMD_KEY = 54
+local LALT_KEY = 58
+local RALT_KEY = 61
+local YEN_KEY = 93
 local ABC_IME_ID = "com.apple.keylayout.ABC"
 local CANGJIE_IME_ID = "com.apple.inputmethod.TCIM.Cangjie"
+
+local FIXED_SNIPPETS = {
+    { title = "📧 我的電子郵件",  text = "myemailk@gmail.com" },
+    { title = "🏢 公司統一編號",  text = "12345678" },
+    { title = "📍 常用寄件地址",  text = "台北市信義區信義路五段7號" },
+    { title = "✍️ 常用客套回覆",  text = "收到，感謝您的協助！我會盡快確認後回覆您。" },
+}
+
 
 -- 白名單設定
 local WHITE_LIST_IDS = {
@@ -34,6 +41,60 @@ local WHITE_LIST_IDS = {
 
 local COOLDOWN_TIME = 0.2
 local lastTriggerTime = 0
+
+local clipboardHistory = {}
+local MAX_CLIPBOARD_ITEMS = 10 
+local lastCount = hs.pasteboard.changeCount()
+clipboardTimer = hs.timer.doEvery(0.5, function()
+    local currentCount = hs.pasteboard.changeCount()
+    if currentCount ~= lastCount then
+        local nowContent = hs.pasteboard.getContents()
+        if nowContent and nowContent ~= "" then
+            local isFixed = false
+            for _, fixed in ipairs(FIXED_SNIPPETS) do
+                if nowContent == fixed.text then isFixed = true; break end
+            end
+            if not isFixed and nowContent ~= clipboardHistory then
+                table.insert(clipboardHistory, 1, nowContent)
+                if #clipboardHistory > MAX_CLIPBOARD_ITEMS then table.remove(clipboardHistory) end
+            end
+        end
+        lastCount = currentCount
+    end
+end)
+local function showClipboardChooser()
+    local choices = {}
+    for _, fixed in ipairs(FIXED_SNIPPETS) do
+        table.insert(choices, {
+            text = fixed.title,
+            subText = fixed.text,
+            actualText = fixed.text
+        })
+    end
+    for i, item in ipairs(clipboardHistory) do
+        local summary = string.gsub(item, "[\r\n]", " ")
+        if string.len(summary) > 40 then summary = string.sub(summary, 1, 40) .. "..." end
+        table.insert(choices, {
+            text = string.format("[%d] 📋 %s", i, summary),
+            subText = item,
+            actualText = item
+        })
+    end
+    if #choices == 0 then
+        hs.alert.show("📭 選單目前沒有內容")
+        return
+    end
+    if myChooser then myChooser:delete() end
+    myChooser = hs.chooser.new(function(choice)
+        if choice then
+            hs.pasteboard.setContents(choice.actualText)
+            hs.timer.doAfter(0.02, function() hs.eventtap.keyStroke({"cmd"}, "v", 0) end)
+        end
+    end)
+    myChooser:choices(choices)
+    myChooser:placeholderText("輸入關鍵字可模糊搜尋常用字或剪貼簿...")
+    myChooser:show()
+end
 
 -- 模擬按下系統「選取下一個輸入來源」快捷鍵 (Control + Space)
 local function simulateSystemImeSwitch()
@@ -95,23 +156,32 @@ kanaTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
     return false
 end):start()
 
--- 2. 英數 鍵監聽 (包含切換英文、Cmd+英數全螢幕、Opt+英數視窗截圖)
+-- 2. 英數 (Eisuu) 鍵監聽：移入集中式狀態機，支援「單擊英文、雙擊選單」
+local eisuuClickCount = 0
+local eisuuClickTimer = nil
+local EISUU_DOUBLE_TIMEOUT = 0.40 
 eisuuTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
     local keyCode = event:getKeyCode()
     local flags = event:getFlags()
-    
     if keyCode == EISUU_KEY then
         if flags.alt then
-            hs.eventtap.keyStroke({"cmd", "shift"}, "1", 0) -- Opt + 英數 = 當前視窗截圖
+            hs.eventtap.keyStroke({"cmd", "shift"}, "1", 0)
             return true
         end
-
         if flags.cmd then
-            hs.eventtap.keyStroke({"cmd", "shift"}, "3", 0) -- Cmd + 英數 = 全螢幕截圖
+            hs.eventtap.keyStroke({"cmd", "shift"}, "3", 0)
             return true
         end
-        
-        hs.keycodes.currentSourceID(ABC_IME_ID) -- 單擊英數：切英文 ABC
+        if eisuuClickTimer then eisuuClickTimer:stop() end
+        eisuuClickCount = eisuuClickCount + 1
+        eisuuClickTimer = hs.timer.doAfter(EISUU_DOUBLE_TIMEOUT, function()
+            if eisuuClickCount == 1 then
+                hs.keycodes.currentSourceID(ABC_IME_ID)
+            elseif eisuuClickCount == 2 then
+                showClipboardChooser()
+            end
+            eisuuClickCount = 0 
+        end)
         return true
     end
     return false 
@@ -214,4 +284,6 @@ secureInputTimer = hs.timer.doEvery(3, function()
 end)
 
 hs.autoLaunch(true)
+
+
 
