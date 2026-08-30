@@ -58,7 +58,10 @@ else
     exit 1
 fi
 
-echo -e "  → 正在透過 Shell 自動配置 Shottr 的自訂快捷鍵..."
+echo -e "\n${BLUE}[5/5] 正在透過系統底層指令自動注入 Shottr 精準參數設定...${NC}"
+
+# 強制讓系統重新載入 Shottr 的最新偏好設定
+killall Shottr 2>/dev/null
 
 # 1. 作用中視窗截圖 -> ⌘⇧1 (Cmd+Shift+1)
 defaults write cc.shottr hotkey_window -dict key 18 modifiers 768
@@ -78,18 +81,24 @@ defaults write cc.shottr hotkey_repeat -dict key 26 modifiers 768
 # 6. 開啟 App 歷史預覽視窗 -> ⌘⇧8 (Cmd+Shift+8)
 defaults write cc.shottr hotkey_show -dict key 28 modifiers 768
 
-# 強制讓系統重新載入 Shottr 的最新偏好設定
-killall Shottr 2>/dev/null
+# 修改預設截圖儲存路徑為「下載」
+defaults write cc.shottr save_location "$HOME/Desktop"
 
-echo -e "\n${BLUE}[5/5] 正在配置開機自動啟動並引導權限設定...${NC}"
+# 修改預設儲存格式為 JPEG (省空間) 或 PNG (高清)
+defaults write cc.shottr save_format "PNG"
+
+# 開啟防抖：如果跟 MOS 等滑鼠平滑滾動軟體衝突，直接 Shell 開啟「反轉滾動長截圖方向」
+defaults write cc.shottr reverse_scrolling -bool true
+
+echo -e "${GREEN}  ✓ Shottr 6組生產力快捷鍵、儲存路徑與格式已由腳本全自動配置完成！${NC}"
 open -a Hammerspoon
 open -a Shottr
-echo -e "${GREEN}========================================================${NC}"
+echo -e "\n${GREEN}========================================================${NC}"
 echo -e "${GREEN}${BOLD}🎉 一鍵自動安裝完成！請配合進行最後的 macOS 手動權限設定：${NC}"
-echo -e "${GREEN}========================================================${NC}"
+echo -e "========================================================${NC}"
 echo -e "${BOLD}1. 允許系統輔助功能：${NC}"
 echo -e "   請前往 「系統設定」 → 「隱私權與安全性」 → 「輔助功能」，"
-echo -e "   將 Hammerspoon 與 Shottr 的開關【開啟】。"
+echo -e "   將 Hammerspoon 與 Shottr 的開關【開啟】（若已開啟，請重啟一次）。"
 echo -e "\n${BOLD}2. 允許螢幕錄製：${NC}"
 echo -e "   請前往 「系統設定」 → 「隱私權與安全性」 → 「螢幕錄製」，將 Shottr 【開啟】。"
 echo -e "\n${BOLD}3. 根治系統存檔框卡死 Bug：${NC}"
@@ -98,4 +107,3 @@ echo -e "   【關閉（不要勾選）】「自動切換到文件的輸入來�
 echo -e "\n${BOLD}4. 核對輸入法快捷鍵：${NC}"
 echo -e "   請前往 「系統設定」 → 「鍵盤」 → 「鍵盤快捷鍵...」 → 「輸入來源」，"
 echo -e "   確保 「選取下一個輸入來源」 為 Control + Space (^空間)。\n"
-
