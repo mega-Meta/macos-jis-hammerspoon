@@ -43,7 +43,7 @@
 ## 🛠️ 快速安裝指令
 ### 直接下載及執行 install.sh
    ```bash
-   /bin/bash -c "$(curl -fsSL https://githubusercontent.com)"
+   /bin/bash -c "$(curl -fsSL https://github.com/mega-Meta/macos-jis-hammerspoon/blob/main/install.sh)"
    ```
 
 ---
