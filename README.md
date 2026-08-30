@@ -45,7 +45,7 @@
    ```bash
    /bin/bash -c "$(curl -fsSL https://github.com/mega-Meta/macos-jis-hammerspoon/blob/main/install.sh)"
    ```
-腳本會自動完成所有繁瑣的步驟：檢查並安裝 Homebrew 軟體管理工具、自動安裝 Hammerspoon 與 Shottr、自動建立設定目錄、從您的 GitHub 倉庫下載最新代碼、並引導使用者開啟 macOS 系統權限。
+### 腳本會自動完成所有繁瑣的步驟：檢查並安裝 Homebrew 軟體管理工具、自動安裝 Hammerspoon 與 Shottr、自動建立設定目錄、從您的 GitHub 倉庫下載最新代碼、並引導使用者開啟 macOS 系統權限。
 
 ---
 
