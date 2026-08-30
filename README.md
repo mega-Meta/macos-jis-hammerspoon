@@ -41,7 +41,7 @@
 ---
 
 ## 🛠️ 一鍵安裝自動化腳本 install.sh
-### 下載及執行 install.sh
+### 下載及執行 install.sh (開啟Terminal,複製貼上以下命令)
    ```bash
    /bin/bash -c "$(curl -fsSL https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/install.sh)"
    ```
