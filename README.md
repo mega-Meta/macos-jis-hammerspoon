@@ -95,6 +95,7 @@ local FIXED_SNIPPETS = {
 如果你有其他軟體（如微信 WeChat、Discord 等）在切換視窗時**不想被強制換成英文**，可以自行查詢其 `Bundle ID` 並寫入 `init.lua` 中的 `WHITE_LIST_IDS` 清單中（設定為 `true` 代表不強制切英文）。
 
 ---
+
 ## 🎉 安裝完成！請配合進行最後的 macOS 手動權限設定：
 ### 1. 允許系統輔助功能：
    請前往 「系統設定」 → 「隱私權與安全性」 → 「輔助功能」，
@@ -112,6 +113,7 @@ local FIXED_SNIPPETS = {
    確保 「選取下一個輸入來源」 為 Control + Space (^空間)。
 
 ---
+
 ## **查詢方法**：
 1. 開啟 Hammerspoon 主控台（Open Console）。
 2. 解開 `init.lua` 第 3 行的註解或直接在 Console 執行偵測：
@@ -120,5 +122,6 @@ local FIXED_SNIPPETS = {
    ```
 3. 用滑鼠點擊目標 App，主控台就會印出其專屬 ID（例如：`com.tencent.xinWeChat`）。
 
+---
 ## 📄 授權條款
 本專案基於 [MIT License](LICENSE) 開源分享。歡迎 Fork、Star 或提出 PR 一起優化 Mac JIS 鍵盤的操作體驗！
