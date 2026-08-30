@@ -93,6 +93,13 @@ local FIXED_SNIPPETS = {
 
 ### 2. 擴充 App 白名單
 如果你有其他軟體（如微信 WeChat、Discord 等）在切換視窗時**不想被強制換成英文**，可以自行查詢其 `Bundle ID` 並寫入 `init.lua` 中的 `WHITE_LIST_IDS` 清單中（設定為 `true` 代表不強制切英文）。
+#### 軟體名稱查詢方法：
+1. 開啟 Hammerspoon 主控台（Open Console）。
+2. 解開 `init.lua` 第 3 行的註解或直接在 Console 執行偵測：
+   ```lua
+   testWatcher = hs.application.watcher.new(function(name, event, app) if event == hs.application.watcher.activated and app then print("ID: " .. tostring(app:bundleID())) end end):start()
+   ```
+3. 用滑鼠點擊目標 App，主控台就會印出其專屬 ID（例如：`com.tencent.xinWeChat`）。
 
 ---
 
@@ -114,14 +121,5 @@ local FIXED_SNIPPETS = {
 
 ---
 
-## **查詢方法**：
-1. 開啟 Hammerspoon 主控台（Open Console）。
-2. 解開 `init.lua` 第 3 行的註解或直接在 Console 執行偵測：
-   ```lua
-   testWatcher = hs.application.watcher.new(function(name, event, app) if event == hs.application.watcher.activated and app then print("ID: " .. tostring(app:bundleID())) end end):start()
-   ```
-3. 用滑鼠點擊目標 App，主控台就會印出其專屬 ID（例如：`com.tencent.xinWeChat`）。
-
----
 ## 📄 授權條款
 本專案基於 [MIT License](LICENSE) 開源分享。歡迎 Fork、Star 或提出 PR 一起優化 Mac JIS 鍵盤的操作體驗！
