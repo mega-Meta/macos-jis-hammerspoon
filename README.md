@@ -95,8 +95,8 @@
 * `⌘⇧7` $\rightarrow$ Repeat area screenshot
 * `⌘⇧8` $\rightarrow$ Open App
 
-![Shottr settings Screenshot](/images/shottr setting-1.png)
-![Shottr settings Screenshot](/images/shottr setting-2.png)
+![Shottr settings Screenshot](images/shottr setting-1.png)
+![Shottr settings Screenshot](images/shottr setting-2.png)
 
 ---
 
