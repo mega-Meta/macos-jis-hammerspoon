@@ -17,7 +17,8 @@ local LALT_KEY = 58
 local RALT_KEY = 61
 local YEN_KEY = 93
 local ABC_IME_ID = "com.apple.keylayout.ABC"
-local CANGJIE_IME_ID = "com.apple.inputmethod.TCIM.Cangjie"
+local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+--local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
 
 local FIXED_SNIPPETS = {
     { title = "📧 我的電子郵件",  text = "myemailk@gmail.com" },
@@ -144,7 +145,7 @@ kanaTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
         
         if clickCount == 1 then
             clickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMEOUT, function()
-                setSpecificIME(CANGJIE_IME_ID) -- 單擊：智慧切倉頡
+                setSpecificIME(1CLICK_IME_ID) -- 單擊：智慧切倉頡
                 clickCount = 0 
             end)
         elseif clickCount == 2 then
