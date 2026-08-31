@@ -63,6 +63,7 @@ PLIST_FILE="$HOME/Library/Preferences/cc.shottr.plist"
 RAW_PLIST_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/cc.shottr.plist"
 
 # 下載設定檔
+echo -e "  → 正在從您的 GitHub 下載最新的 shottr 設定檔..."
 curl -fsSL "$RAW_PLIST_URL" -o "$PLIST_FILE"
 
 if [ $? -eq 0 ]; then
