@@ -97,6 +97,8 @@
 
 ![Shottr settings Screenshot](images/shottr setting-1.png)
 ![Shottr settings Screenshot](images/shottr setting-2.png)
+<img src="images/shottr setting-1.png" alt="Project Screenshot" width="500">
+
 
 ---
 
