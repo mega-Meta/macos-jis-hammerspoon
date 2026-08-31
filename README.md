@@ -96,7 +96,7 @@
 * `⌘⇧8` $\rightarrow$ Open App
 
 <img src="images/shottr setting-1.png" alt="Project Screenshot" width="500">
-<img src="images/shottr setting-2.png" alt="Project Screenshot" width="500">
+<img src="images/shottr settings-2.png" alt="Project Screenshot" width="500">
 
 ---
 
