@@ -93,7 +93,7 @@ defaults write cc.shottr reverse_scrolling -bool true
 echo -e "${GREEN}  ✓ Shottr 6組生產力快捷鍵、儲存路徑與格式已由腳本全自動配置完成！${NC}"
 open -a Hammerspoon
 open -a Shottr
-echo -e "  → 正在引導 Hammerspoon 自動 Reload Config...；如果有錯誤，請依OS要求授權後，再重新執行一鍵安裝。"
+echo -e "  → 正在引導 Hammerspoon 自動 Reload Config..." #；如果有錯誤，請依OS要求授權後，再重新執行一鍵安裝。"
 sleep 2.0
 # 🌟【防錯升級】嘗試執行 Reload，若因權限或首次啟動失敗，捕捉錯誤並印出友善提示訊息
 /Applications/Hammerspoon.app/Contents/Frameworks/hs/hs -c "hs.reload()" 2>/dev/null
