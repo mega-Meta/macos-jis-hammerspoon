@@ -68,7 +68,14 @@
 
 1. 打開或建立主機上的配置路徑：`~/.hammerspoon/`
 2. 將本 Repository 中的 `init.lua` 檔案複製到該目錄下。
-3. 點擊 Mac 選單列的 Hammerspoon 圖示 $\rightarrow$ **Reload Config**。
+3. 修改單擊kana鍵預設輸入法，點擊 Mac 選單列的 Hammerspoon 圖示，點擊[open config]
+   倉頡輸入法使用者，修改單擊kana鍵預設如下:
+   local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+   --local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+   注音輸入法使用者，修改單擊kana鍵預設如下:
+   --local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+   local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+4. 點擊 Mac 選單列的 Hammerspoon 圖示 $\rightarrow$ **Reload Config**。
 
 ### 第三步：必須調整的 macOS 系統設定（關鍵）
 
