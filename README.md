@@ -94,7 +94,8 @@
 * `⌘⇧2` $\rightarrow$ Scrolling screenshot
 * `⌘⇧7` $\rightarrow$ Repeat area screenshot
 * `⌘⇧8` $\rightarrow$ Open App
-./images/shottr setting-1.png
+![Shottr settings Screenshot](/images/shottr setting-1.png)
+![Shottr settings Screenshot](/images/shottr setting-2.png)
 ---
 
 ## 🔍 自行擴充自訂文字與白名單
