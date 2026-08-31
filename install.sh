@@ -66,7 +66,7 @@ killall cfprefsd 2>/dev/null
 sleep 0.5
 
 PLIST_FILE="$HOME/Library/Preferences/cc.shottr.plist"
-RAW_PLIST_URL="https://githubusercontent.com"
+RAW_PLIST_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/cc.shottr.plist"
 
 curl -fsSL "$RAW_PLIST_URL" -o "$PLIST_FILE"
 
