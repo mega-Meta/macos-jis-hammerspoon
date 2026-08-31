@@ -44,7 +44,7 @@ if [ ! -d "$HS_DIR" ]; then
     mkdir -p "$HS_DIR"
 fi
 echo -e "  → 正在從您的 GitHub 下載最新的 init.lua 設定檔..."
-RAW_URL="https://githubusercontent.com"
+RAW_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/init.lua"
 curl -fsSL "$RAW_URL" -o "$HS_DIR/init.lua"
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}  ✓ init.lua 部署成功！${NC}"
