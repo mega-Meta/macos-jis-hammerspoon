@@ -93,6 +93,10 @@ defaults write cc.shottr reverse_scrolling -bool true
 echo -e "${GREEN}  ✓ Shottr 6組生產力快捷鍵、儲存路徑與格式已由腳本全自動配置完成！${NC}"
 open -a Hammerspoon
 open -a Shottr
+echo -e "  → 正在引導 Hammerspoon 自動 Reload Config..."
+sleep 1.5
+osascript -e 'tell application "System Events" to keystroke "r" using {command down, option down, control down}'
+echo -e "${GREEN}  ✓ Hammerspoon 設定檔載入成功！${NC}"
 echo -e "\n${GREEN}========================================================${NC}"
 echo -e "${GREEN}${BOLD}🎉 一鍵自動安裝完成！請配合進行最後的 macOS 手動權限設定：${NC}"
 echo -e "========================================================${NC}"
