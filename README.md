@@ -1,4 +1,5 @@
-# ⌨️ macOS JIS 鍵盤極速流：Hammerspoon 輸入法智慧切換 & Shottr 頂級截圖與生產力配置
+# ⌨️ macOS JIS 鍵盤極速流,正體中文使用者優化：
+## Hammerspoon 輸入法智慧切換 & Shottr 頂級截圖與生產力配置
 
 本專案專為 **macOS + JIS（日系硬體佈局）鍵盤** 的重度使用者量身打造。透過 Hammerspoon 的底層事件監聽、內建 `hs.chooser` 模糊搜尋引擎與 Shottr 截圖軟體的深度整合，打造出大拇指不離核心區的「單手極速操作流」。
 
@@ -18,7 +19,7 @@
 
 | 動作 | 觸發按鍵 | 實際效果說明 |
 | :--- | :--- | :--- |
-| **智慧切倉頡** | 單擊 **`かな`** 鍵 | 0.45 秒內未按第二下，**直接精準切到倉頡**（支援 Safari 安全防護）。 |
+| **智慧切倉頡** | 單擊 **`かな`** 鍵 | 0.45 秒內未按第二下，**直接精準切到倉頡**（支援 Safari 安全防護）。可修改init.lua第20，21行預設成注音 |
 | **切換其他輸入法** | 雙擊 **`かな`** 鍵 | 連點兩下，觸發系統標準循環，切換到下一個輸入法（如注音、日文）。 |
 | **精準切英文** | 單擊 **`英數`** 鍵 | 0.40 秒內未按第二下，瞬間一鍵返回純英文（ABC）輸入來源。 |
 | **喚出常用字與剪貼簿** | 雙擊 **`英數`** 鍵 | **全新高效功能**：瞬間在螢幕中央彈出 Spotlight 風格面板。上半部為固定常用字，下半部為剪貼簿歷史。支援滑鼠點擊或鍵盤上下鍵選取，按下 `Enter` 即可**自動模糊搜尋並極速貼上**。 |
@@ -40,7 +41,16 @@
 
 ---
 
-## 🛠️ 快速部署與安裝指南
+## 🛠️ 一鍵安裝自動化腳本 install.sh
+### 下載及執行 install.sh (開啟Terminal,複製貼上以下命令)
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/install.sh)"
+   ```
+### 腳本會自動完成所有繁瑣的步驟：檢查並安裝 Homebrew 軟體管理工具、自動安裝 Hammerspoon 與 Shottr、自動建立設定目錄、從您的 GitHub 倉庫下載最新代碼、並引導使用者開啟 macOS 系統權限。
+
+---
+
+## 🛠️ 部署與安裝指南
 
 ### 第一步：安裝必備軟體
 
@@ -58,7 +68,14 @@
 
 1. 打開或建立主機上的配置路徑：`~/.hammerspoon/`
 2. 將本 Repository 中的 `init.lua` 檔案複製到該目錄下。
-3. 點擊 Mac 選單列的 Hammerspoon 圖示 $\rightarrow$ **Reload Config**。
+3. 修改單擊kana鍵預設輸入法，點擊 Mac 選單列的 Hammerspoon 圖示，點擊[open config]
+   倉頡輸入法使用者，修改單擊kana鍵預設如下:
+   local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+   --local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+   注音輸入法使用者，修改單擊kana鍵預設如下:
+   --local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+   local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+4. 點擊 Mac 選單列的 Hammerspoon 圖示 $\rightarrow$ **Reload Config**。
 
 ### 第三步：必須調整的 macOS 系統設定（關鍵）
 
@@ -93,14 +110,33 @@ local FIXED_SNIPPETS = {
 
 ### 2. 擴充 App 白名單
 如果你有其他軟體（如微信 WeChat、Discord 等）在切換視窗時**不想被強制換成英文**，可以自行查詢其 `Bundle ID` 並寫入 `init.lua` 中的 `WHITE_LIST_IDS` 清單中（設定為 `true` 代表不強制切英文）。
-
-**查詢方法**：
+#### 軟體名稱查詢方法：
 1. 開啟 Hammerspoon 主控台（Open Console）。
 2. 解開 `init.lua` 第 3 行的註解或直接在 Console 執行偵測：
    ```lua
    testWatcher = hs.application.watcher.new(function(name, event, app) if event == hs.application.watcher.activated and app then print("ID: " .. tostring(app:bundleID())) end end):start()
    ```
 3. 用滑鼠點擊目標 App，主控台就會印出其專屬 ID（例如：`com.tencent.xinWeChat`）。
+
+---
+
+## 🎉 安裝完成！請配合進行最後的 macOS 手動權限設定：
+### 1. 允許系統輔助功能：
+   請前往 「系統設定」 → 「隱私權與安全性」 → 「輔助功能」，
+   將 Hammerspoon 與 Shottr 的開關【開啟】（若已開啟，請重啟一次）。
+
+### 2. 允許螢幕錄製：
+   請前往 「系統設定」 → 「隱私權與安全性」 → 「螢幕錄製」，將 Shottr 【開啟】。
+
+### 3. 根治系統存檔框卡死 Bug：
+   請前往 「系統設定」 → 「鍵盤」 → 「輸入來源（點編輯）」，
+   【關閉（不要勾選）】「自動切換到文件的輸入來源」。
+
+### 4. 核對輸入法快捷鍵：
+   請前往 「系統設定」 → 「鍵盤」 → 「鍵盤快捷鍵...」 → 「輸入來源」，
+   確保 「選取下一個輸入來源」 為 Control + Space (^空間)。
+
+---
 
 ## 📄 授權條款
 本專案基於 [MIT License](LICENSE) 開源分享。歡迎 Fork、Star 或提出 PR 一起優化 Mac JIS 鍵盤的操作體驗！
