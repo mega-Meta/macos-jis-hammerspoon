@@ -94,8 +94,16 @@ echo -e "${GREEN}  ✓ Shottr 6組生產力快捷鍵、儲存路徑與格式已�
 open -a Hammerspoon
 open -a Shottr
 echo -e "  → 正在引導 Hammerspoon 自動 Reload Config...；如果有錯誤，請依OS要求授權後，再重新執行一鍵安裝。"
-sleep 1.5
-osascript -e 'tell application "System Events" to keystroke "r" using {command down, option down, control down}'
+sleep 2.0
+# 🌟【防錯升級】嘗試執行 Reload，若因權限或首次啟動失敗，捕捉錯誤並印出友善提示訊息
+/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs -c "hs.reload()" 2>/dev/null
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}  ✓ Hammerspoon 設定檔已由內建通道成功載入！${NC}"
+else
+    echo -e "${YELLOW}  ℹ 提示：由於您的 Mac 是首次安裝 Hammerspoon，系統隱私權限（輔助功能）尚未對其授權。${NC}"
+    echo -e "${YELLOW}          目前的自動載入已被系統阻斷。請不用擔心，這屬於正常現象！${NC}"
+    echo -e "${YELLOW}          請先完成下方的【手動權限設定】，完成後設定檔便會全自動生效。${NC}"
+fi
 echo -e "${GREEN}  ✓ Hammerspoon 設定檔載入成功！${NC}"
 echo -e "\n${GREEN}========================================================${NC}"
 echo -e "${GREEN}${BOLD}🎉 一鍵自動安裝完成！請配合進行最後的 macOS 手動權限設定：${NC}"
