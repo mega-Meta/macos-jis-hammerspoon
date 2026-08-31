@@ -62,13 +62,25 @@ sleep 0.5
 PLIST_FILE="$HOME/Library/Preferences/cc.shottr.plist"
 RAW_PLIST_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/cc.shottr.plist"
 
+# 下載設定檔
 curl -fsSL "$RAW_PLIST_URL" -o "$PLIST_FILE"
 
 if [ $? -eq 0 ]; then
-    # 確保儲存路徑因應使用者帳號名稱自動調整（動態修正為當前本機使用者的桌面）
+    # 🌟【核心修正 2】強制將下載下來的 xml 格式偏好設定轉碼為標準的 macOS 二進位格式，否則快取系統不收
+    plutil -convert binary1 "$PLIST_FILE" 2>/dev/null
+    
+    # 🌟【核心修正 3】利用 defaults import 強制把這個實體檔案直接灌進快取資料庫（核心必殺技）
+    defaults import cc.shottr "$PLIST_FILE"
+    
+    # 確保儲存路徑動態對齊目前使用者的桌面路徑
     defaults write cc.shottr save_location "$HOME/Desktop"
+    defaults write cc.shottr save_format "PNG"
+    
+    # 🌟【核心修正 4】再次強制同步整理資料庫，並通知中央系統偏好已被更動
     defaults read cc.shottr >/dev/null
-    echo -e "${GREEN}  ✓ Shottr 實體設定檔部署成功，所有快捷鍵與路徑已複製完畢！${NC}"
+    killall cfprefsd 2>/dev/null
+    sleep 0.5
+    echo -e "${GREEN}  ✓ Shottr 實體設定與系統快取同步更新成功！${NC}"
 else
     echo -e "${YELLOW}  ⚠️ 提示：無法從 GitHub 下載 cc.shottr.plist，將保留您本機原本的 Shottr 快捷鍵。${NC}"
 fi
