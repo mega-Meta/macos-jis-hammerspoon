@@ -48,7 +48,7 @@ echo -e "  → 正在從您的 GitHub 下載最新的 init.lua 設定檔..."
 
 # 🌟【請直接在此處修改】將下方網址，完整替換成您 GitHub 倉庫中 init.lua 的真實 Raw 網址。
 # 注意：請確認大小寫是否 100% 與 GitHub 網頁上一致！
-RAW_URL="https://github.com/mega-Meta/macos-jis-hammerspoon"
+RAW_URL="https://raw.githubusercontent.com/mega-Meta/macos-jis-hammerspoon/refs/heads/main/init.lua"
 
 curl -fsSL "$RAW_URL" -o "$HS_DIR/init.lua"
 if [ $? -eq 0 ]; then
