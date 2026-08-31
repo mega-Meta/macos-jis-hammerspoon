@@ -60,35 +60,66 @@ fi
 
 echo -e "\n${BLUE}[5/5] 正在透過系統底層指令自動注入 Shottr 精準參數設定...${NC}"
 
-# 強制讓系統重新載入 Shottr 的最新偏好設定
+# 🌟【核心修正 1】強制完全關閉 Shottr 與系統偏好設定快取服務，防止快取回寫覆蓋
 killall Shottr 2>/dev/null
+killall cfprefsd 2>/dev/null
+sleep 0.5
 
+PLIST_FILE="$HOME/Library/Preferences/cc.shottr.plist"
+
+# 如果設定檔不存在，先建立一個基礎檔案
+if [ ! -f "$PLIST_FILE" ]; then
+    defaults write cc.shottr save_format "PNG"
+fi
+
+# 🌟【核心修正 2】改用 PlistBuddy 進行嚴格的資料型態注入 (確認 key 與 modifiers 為 integer)
 # 1. 作用中視窗截圖 -> ⌘⇧1 (Cmd+Shift+1)
-defaults write cc.shottr hotkey_window -dict key 18 modifiers 768
+/usr/libexec/PlistBuddy -c "Delete :hotkey_window" "$PLIST_FILE" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Add :hotkey_window dict" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_window:key integer 18" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_window:modifiers integer 768" "$PLIST_FILE"
 
 # 2. 滾動長截圖 -> ⌘⇧2 (Cmd+Shift+2)
-defaults write cc.shottr hotkey_scrolling -dict key 19 modifiers 768
+/usr/libexec/PlistBuddy -c "Delete :hotkey_scrolling" "$PLIST_FILE" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Add :hotkey_scrolling dict" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_scrolling:key integer 19" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_scrolling:modifiers integer 768" "$PLIST_FILE"
 
 # 3. 全螢幕截圖 -> ⌘⇧3 (Cmd+Shift+3)
-defaults write cc.shottr hotkey_fullscreen -dict key 20 modifiers 768
+/usr/libexec/PlistBuddy -c "Delete :hotkey_fullscreen" "$PLIST_FILE" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Add :hotkey_fullscreen dict" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_fullscreen:key integer 20" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_fullscreen:modifiers integer 768" "$PLIST_FILE"
 
 # 4. 區域範圍截圖 -> ⌘⇧4 (Cmd+Shift+4)
-defaults write cc.shottr hotkey_area -dict key 21 modifiers 768
+/usr/libexec/PlistBuddy -c "Delete :hotkey_area" "$PLIST_FILE" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Add :hotkey_area dict" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_area:key integer 21" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_area:modifiers integer 768" "$PLIST_FILE"
 
 # 5. 重複上一次區域截圖 -> ⌘⇧7 (Cmd+Shift+7)
-defaults write cc.shottr hotkey_repeat -dict key 26 modifiers 768
+/usr/libexec/PlistBuddy -c "Delete :hotkey_repeat" "$PLIST_FILE" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Add :hotkey_repeat dict" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_repeat:key integer 26" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_repeat:modifiers integer 768" "$PLIST_FILE"
 
 # 6. 開啟 App 歷史預覽視窗 -> ⌘⇧8 (Cmd+Shift+8)
-defaults write cc.shottr hotkey_show -dict key 28 modifiers 768
+/usr/libexec/PlistBuddy -c "Delete :hotkey_show" "$PLIST_FILE" 2>/dev/null
+/usr/libexec/PlistBuddy -c "Add :hotkey_show dict" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_show:key integer 28" "$PLIST_FILE"
+/usr/libexec/PlistBuddy -c "Add :hotkey_show:modifiers integer 768" "$PLIST_FILE"
 
+# 注入其他一般參數
 # 修改預設截圖儲存路徑為「下載」
-defaults write cc.shottr save_location "$HOME/Desktop"
-
+defaults write cc.shottr save_location "$HOME/Downloads"
 # 修改預設儲存格式為 JPEG (省空間) 或 PNG (高清)
 defaults write cc.shottr save_format "PNG"
 
 # 開啟防抖：如果跟 MOS 等滑鼠平滑滾動軟體衝突，直接 Shell 開啟「反轉滾動長截圖方向」
 defaults write cc.shottr reverse_scrolling -bool true
+
+# 🌟【核心修正 3】強制重新整理系統偏好設定資料庫
+defaults read cc.shottr >/dev/null
 
 echo -e "${GREEN}  ✓ Shottr 6組生產力快捷鍵、儲存路徑與格式已由腳本全自動配置完成！${NC}"
 open -a Hammerspoon
