@@ -16,6 +16,7 @@ local RCMD_KEY = 54
 local LALT_KEY = 58
 local RALT_KEY = 61
 local YEN_KEY = 93
+local DOUBLE_CLICK_TIMER = 0.35
 local ABC_IME_ID = "com.apple.keylayout.ABC"
 --local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
 local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
@@ -123,7 +124,7 @@ end
 -- 1. かな 鍵監聽 (包含輸入法切換、Cmd+かな區域截圖、Opt+かな滾動長截圖)
 local clickCount = 0
 local clickTimer = nil
-local DOUBLE_CLICK_TIMEOUT = 0.50 
+--local DOUBLE_CLICK_TIMEOUT = 0.50 
 
 kanaTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
     local keyCode = event:getKeyCode()
@@ -144,7 +145,7 @@ kanaTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
         clickCount = clickCount + 1
         
         if clickCount == 1 then
-            clickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMEOUT, function()
+            clickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
                 setSpecificIME(CLICK_IME_ID) -- 單擊：智慧切倉頡
                 clickCount = 0 
             end)
@@ -160,7 +161,7 @@ end):start()
 -- 2. 英數 (Eisuu) 鍵監聽：移入集中式狀態機，支援「單擊英文、雙擊選單」
 local eisuuClickCount = 0
 local eisuuClickTimer = nil
-local EISUU_DOUBLE_TIMEOUT = 0.40 
+--local EISUU_DOUBLE_TIMEOUT = 0.40 
 eisuuTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
     local keyCode = event:getKeyCode()
     local flags = event:getFlags()
@@ -175,7 +176,7 @@ eisuuTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
         end
         if eisuuClickTimer then eisuuClickTimer:stop() end
         eisuuClickCount = eisuuClickCount + 1
-        eisuuClickTimer = hs.timer.doAfter(EISUU_DOUBLE_TIMEOUT, function()
+        eisuuClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
             if eisuuClickCount == 1 then
                 hs.keycodes.currentSourceID(ABC_IME_ID)
             elseif eisuuClickCount == 2 then
@@ -210,7 +211,7 @@ modifierTap = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, function(e
             if cmdClickTimer then cmdClickTimer:stop() end
             cmdClickCount = cmdClickCount + 1
             if cmdClickCount == 1 then
-                cmdClickTimer = hs.timer.doAfter(0.35, function() cmdClickCount = 0 end)
+                cmdClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function() cmdClickCount = 0 end)
             elseif cmdClickCount == 2 then
                 cmdClickCount = 0
                 hs.eventtap.keyStroke({"cmd", "shift"}, "5", 0)
@@ -226,7 +227,7 @@ modifierTap = hs.eventtap.new({hs.eventtap.event.types.flagsChanged}, function(e
             if altClickTimer then altClickTimer:stop() end
             altClickCount = altClickCount + 1
             if altClickCount == 1 then
-                altClickTimer = hs.timer.doAfter(0.35, function() altClickCount = 0 end)
+                altClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function() altClickCount = 0 end)
             elseif altClickCount == 2 then
                 altClickCount = 0
                 hs.eventtap.keyStroke({"cmd", "shift"}, "8", 0) -- 模擬發送 Cmd+Shift+8
