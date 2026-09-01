@@ -17,7 +17,7 @@ local LALT_KEY = 58
 local RALT_KEY = 61
 local YEN_KEY = 93
 local ABC_IME_ID = "com.apple.keylayout.ABC"
---local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+--local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
 local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
 
 local FIXED_SNIPPETS = {
