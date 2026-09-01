@@ -19,9 +19,9 @@
 
 | 動作 | 觸發按鍵 | 實際效果說明 |
 | :--- | :--- | :--- |
-| **智慧切倉頡** | 單擊 **`かな`** 鍵 | 0.45 秒內未按第二下，**直接精準切到倉頡**（支援 Safari 安全防護）。可修改init.lua第20，21行預設成注音 |
+| **智慧切倉頡** | 單擊 **`かな`** 鍵 | 0.35 秒內未按第二下，**直接精準切到倉頡**（支援 Safari 安全防護）。可修改init.lua第20，21行預設成注音 |
 | **切換其他輸入法** | 雙擊 **`かな`** 鍵 | 連點兩下，觸發系統標準循環，切換到下一個輸入法（如注音、日文）。 |
-| **精準切英文** | 單擊 **`英數`** 鍵 | 0.40 秒內未按第二下，瞬間一鍵返回純英文（ABC）輸入來源。 |
+| **精準切英文** | 單擊 **`英數`** 鍵 | 0.35 秒內未按第二下，瞬間一鍵返回純英文（ABC）輸入來源。 |
 | **喚出常用字與剪貼簿** | 雙擊 **`英數`** 鍵 | **全新高效功能**：瞬間在螢幕中央彈出 Spotlight 風格面板。上半部為固定常用字，下半部為剪貼簿歷史。支援滑鼠點擊或鍵盤上下鍵選取，按下 `Enter` 即可**自動模糊搜尋並極速貼上**。 |
 | **經典習慣切換** | **`Cmd + Left Shift`** | 保留傳統習慣，按下會切換到下一個輸入法來源。 |
 
@@ -70,8 +70,8 @@
 2. 將本 Repository 中的 `init.lua` 檔案複製到該目錄下。
 3. 修改單擊kana鍵預設輸入法，點擊 Mac 選單列的 Hammerspoon 圖示，點擊[open config]
    倉頡輸入法使用者，修改單擊kana鍵預設如下:
-   local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
-   --local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+   local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
+   --local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
    注音輸入法使用者，修改單擊kana鍵預設如下:
    --local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
    local 1CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
