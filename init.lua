@@ -23,12 +23,13 @@ local FIXED_SNIPPETS = {
 	{ title = "✍️ 常用客套回覆", text = "收到，感謝您的協助！我會盡快確認後回覆您。" },
 }
 
--- 白名單設定
+-- 白名單設定，切換app時，中文輸入法延用(true)，切換成ABC(false)。
 local WHITE_LIST_IDS = {
 	["com.apple.Notes"] = true,
 	["com.apple.Terminal"] = false, --terminal應該以英文為主，所以要切換
 	["com.qvacua.VimR"] = false,
 	["com.mitchellh.ghostty"] = false,
+	["com.coteditor.CotEditor"] = false,
 	["jp.naver.line.mac"] = true,
 	["net.machorro.roberto.Moped"] = true,
 	["com.apple.appkit.xpc.openAndSavePanelService"] = true,
