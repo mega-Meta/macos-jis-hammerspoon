@@ -125,43 +125,93 @@ kanaTap = hs.eventtap
 	end)
 	:start()
 
--- 2. 英數 (Eisuu) 鍵監聽：移入集中式狀態機，支援「單擊英文、雙擊選單」
+-- =========================================================================
+-- 2. 英數 (Eisuu) 鍵監聽：【終極修復版】支援單擊、雙擊、按住當組合鍵
+-- =========================================================================
 local eisuuClickCount = 0
 local eisuuClickTimer = nil
---local EISUU_DOUBLE_TIMEOUT = 0.40
-eisuuTap = hs.eventtap
-	.new({ hs.eventtap.event.types.keyDown }, function(event)
-		local keyCode = event:getKeyCode()
-		local flags = event:getFlags()
-		if keyCode == EISUU_KEY then
-			if flags.alt then
-				hs.eventtap.keyStroke({ "cmd", "shift" }, "1", 0)
-				return true
-			end
-			if flags.cmd then
-				hs.eventtap.keyStroke({ "cmd", "shift" }, "3", 0)
-				return true
-			end
-			if eisuuClickTimer then
-				eisuuClickTimer:stop()
-			end
-			eisuuClickCount = eisuuClickCount + 1
-			eisuuClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
-				if eisuuClickCount == 1 then
-					hs.keycodes.currentSourceID(ABC_IME_ID)
-				-- 更改 init.lua 第 167 行附近的 eisuuClickTimer 內部邏輯：
-                elseif eisuuClickCount == 2 then
-                 -- 改成直接呼叫官方 Spoon 的選單，讓雙擊英數鍵與 ⌥+⌘+V 共享同一個剪貼簿資料庫！
-                    if spoon.ClipboardTool then spoon.ClipboardTool:toggleClipboard() end
-                end
+local isEisuuPressed = false  -- 💡 精確追蹤英數鍵是否正被按住不放
 
-				eisuuClickCount = 0
-			end)
-			return true
-		end
-		return false
-	end)
-	:start()
+eisuuTap = hs.eventtap.new({
+    hs.eventtap.event.types.keyDown,
+    hs.eventtap.event.types.keyUp
+}, function(event)
+    local keyCode = event:getKeyCode()
+    local flags = event:getFlags()
+    local eventType = event:getType() -- 💡 正確獲取目前是按下還是放開
+
+    -- 【情況 A】：當操作的按鍵是「英數鍵」本身
+    if keyCode == EISUU_KEY then
+        if eventType == hs.eventtap.event.types.keyDown then
+            isEisuuPressed = true -- 標記：目前英數鍵被按住了
+            
+            -- 保留你原本的 Shottr 快捷鍵整合 (Opt/Cmd + 英數)
+            if flags.alt then
+                hs.eventtap.keyStroke({ "cmd", "shift" }, "1", 0)
+                return true
+            end
+            if flags.cmd then
+                hs.eventtap.keyStroke({ "cmd", "shift" }, "3", 0)
+                return true
+            end
+            
+            if eisuuClickTimer then eisuuClickTimer:stop() end
+            eisuuClickCount = eisuuClickCount + 1
+            
+        elseif eventType == hs.eventtap.event.types.keyUp then
+            isEisuuPressed = false -- 標記：英數鍵已放開
+            
+            -- 如果按住期間沒有觸發組合鍵，放開時才執行原本的單擊/雙擊
+            if eisuuClickCount > 0 then
+                eisuuClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
+                    if eisuuClickCount == 1 then
+                        hs.keycodes.currentSourceID(ABC_IME_ID) -- 單擊：切英文
+                    elseif eisuuClickCount == 2 then
+                        if spoon.ClipboardTool then
+                            spoon.ClipboardTool:toggleClipboard() -- 雙擊：官方剪貼簿
+                        end
+                    end
+                    eisuuClickCount = 0
+                end)
+            end
+        end
+        return true -- 100% 攔截英數鍵，不讓它干擾系統
+    end
+
+    -- 【情況 B】：當「英數鍵正被按住不放」，且按下了其他按鍵時 $\rightarrow$ 觸發組合鍵！
+    if isEisuuPressed and eventType == hs.eventtap.event.types.keyDown then
+        local char = hs.keycodes.map[keyCode]
+        
+        -- 🌟 核心功能：英數 + C (C 的 Keycode 確定是 8)
+        if char == "v" or keyCode == 9 then
+            eisuuClickCount = 0 -- 關鍵：歸零計數，防止放開英數鍵時誤切換輸入法
+            
+            hs.alert.show("執行：全選 ➔ 貼上 ➔ 儲存 💾")
+            
+            -- 執行全選貼上儲存
+            hs.eventtap.keyStroke({ "cmd" }, "a", 0) -- 1. 全選
+            
+            hs.timer.doAfter(0.01, function()
+                hs.eventtap.keyStroke({ "cmd" }, "v", 0) -- 2. 貼上
+                
+                hs.timer.doAfter(0.01, function()
+                    hs.eventtap.keyStroke({ "cmd" }, "s", 0) -- 3. 儲存
+                end)
+            end)
+            return true -- 吞掉這個按鍵，絕對不會在螢幕上打出 "v" 或中文字
+        end
+        
+        -- 🌟 核心功能：英數 + A (A 的 Keycode 是 0)
+        if char == "a" or keyCode == 0 then
+            eisuuClickCount = 0
+            hs.alert.show("觸發了：英數 + A 組合鍵！")
+            return true
+        end
+    end
+
+    return false -- 其他一般打字 100% 正常放行，絕不卡死
+end):start()
+
 
 -- 3. 修飾鍵監聽 (Cmd+LShift切換、雙擊Cmd工具列、🌟新增：雙擊Option自訂截圖)
 local cmdClickCount = 0
