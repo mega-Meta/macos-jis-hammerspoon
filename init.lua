@@ -5,6 +5,10 @@
 -- 載入名為 WindowHalfsies 的 Spoon
 hs.loadSpoon("WindowHalfsies")
 ]]--
+hs.loadSpoon("WindowSigils")
+hs.loadSpoon("ClipboardTool")
+hs.loadSpoon("BrewInfo")
+
 require("snippets")
 require("auto_reload")
 --require("hs_debug") -- show keyid & appsid on console
@@ -54,67 +58,6 @@ local lastTriggerTime = 0
 local clipboardHistory = {}
 local MAX_CLIPBOARD_ITEMS = 10
 local lastCount = hs.pasteboard.changeCount()
-clipboardTimer = hs.timer.doEvery(0.5, function()
-	local currentCount = hs.pasteboard.changeCount()
-	if currentCount ~= lastCount then
-		local nowContent = hs.pasteboard.getContents()
-		if nowContent and nowContent ~= "" then
-			local isFixed = false
-			for _, fixed in ipairs(FIXED_SNIPPETS) do
-				if nowContent == fixed.text then
-					isFixed = true
-					break
-				end
-			end
-			if not isFixed and nowContent ~= clipboardHistory then
-				table.insert(clipboardHistory, 1, nowContent)
-				if #clipboardHistory > MAX_CLIPBOARD_ITEMS then
-					table.remove(clipboardHistory)
-				end
-			end
-		end
-		lastCount = currentCount
-	end
-end)
-local function showClipboardChooser()
-	local choices = {}
-	for _, fixed in ipairs(FIXED_SNIPPETS) do
-		table.insert(choices, {
-			text = fixed.title,
-			subText = fixed.text,
-			actualText = fixed.text,
-		})
-	end
-	for i, item in ipairs(clipboardHistory) do
-		local summary = string.gsub(item, "[\r\n]", " ")
-		if string.len(summary) > 40 then
-			summary = string.sub(summary, 1, 40) .. "..."
-		end
-		table.insert(choices, {
-			text = string.format("[%d] 📋 %s", i, summary),
-			subText = item,
-			actualText = item,
-		})
-	end
-	if #choices == 0 then
-		hs.alert.show("📭 選單目前沒有內容")
-		return
-	end
-	if myChooser then
-		myChooser:delete()
-	end
-	myChooser = hs.chooser.new(function(choice)
-		if choice then
-			hs.pasteboard.setContents(choice.actualText)
-			hs.timer.doAfter(0.02, function()
-				hs.eventtap.keyStroke({ "cmd" }, "v", 0)
-			end)
-		end
-	end)
-	myChooser:choices(choices)
-	myChooser:placeholderText("輸入關鍵字可模糊搜尋常用字或剪貼簿...")
-	myChooser:show()
-end
 
 -- 模擬按下系統「選取下一個輸入來源」快捷鍵 (Control + Space)
 local function simulateSystemImeSwitch()
@@ -206,9 +149,12 @@ eisuuTap = hs.eventtap
 			eisuuClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
 				if eisuuClickCount == 1 then
 					hs.keycodes.currentSourceID(ABC_IME_ID)
-				elseif eisuuClickCount == 2 then
-					showClipboardChooser()
-				end
+				-- 更改 init.lua 第 167 行附近的 eisuuClickTimer 內部邏輯：
+                elseif eisuuClickCount == 2 then
+                 -- 改成直接呼叫官方 Spoon 的選單，讓雙擊英數鍵與 ⌥+⌘+V 共享同一個剪貼簿資料庫！
+                    if spoon.ClipboardTool then spoon.ClipboardTool:toggleClipboard() end
+                end
+
 				eisuuClickCount = 0
 			end)
 			return true
