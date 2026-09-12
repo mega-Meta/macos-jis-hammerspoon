@@ -3,6 +3,9 @@
 -- 1. 載入資料庫
 local snippet_subs = require("hs_snippets")
 
+
+
+
 -- =========================================================================
 -- 2. 核心發送模組（使用最安全的 KeyStrokes 原生打字流）
 -- =========================================================================
@@ -15,9 +18,12 @@ local function sendRawText(finalOutput)
         finalOutput = string.gsub(finalOutput, "\n$", "")
     end
 
-    -- 【自動翻譯 Raycast 時間標籤】
-    finalOutput = string.gsub(finalOutput, "{datetime}", os.date("%Y-%m-%d %H:%M:%S"))
-    finalOutput = string.gsub(finalOutput, "{date format=\"yyyy%-MM%-dd\"}", os.date("%Y-%m-%d"))
+    -- 調整 snippets.lua 內的標籤替換，確保絕對不會因為特殊符號崩潰：
+    local current_datetime = string.gsub(os.date("%Y-%m-%d %H:%M:%S"), "%%", "%%%%")
+    finalOutput = string.gsub(finalOutput, "{datetime}", current_datetime)
+
+    local current_date = string.gsub(os.date("%Y-%m-%d"), "%%", "%%%%")
+    finalOutput = string.gsub(finalOutput, "{date format=\"yyyy%-MM%-dd\"}", current_date)
     finalOutput = string.gsub(finalOutput, "{time format=\"HH%%:mm\"}", os.date("%H:%M"))
 
     -- 【步驟 A：解析 $CLIPBOARD$】
