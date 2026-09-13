@@ -44,7 +44,7 @@ if [ ! -d "$HS_DIR" ]; then
     mkdir -p "$HS_DIR"
 fi
 echo -e "  → 正在從您的 GitHub 下載最新的 init.lua 設定檔..."
-RAW_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/init.lua"
+RAW_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/original-version/init.lua"
 curl -fsSL "$RAW_URL" -o "$HS_DIR/init.lua"
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}  ✓ init.lua 部署成功！${NC}"
@@ -60,7 +60,7 @@ killall cfprefsd 2>/dev/null
 sleep 0.5
 
 PLIST_FILE="$HOME/Library/Preferences/cc.shottr.plist"
-RAW_PLIST_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/main/cc.shottr.plist"
+RAW_PLIST_URL="https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/original-version/cc.shottr.plist"
 
 # 下載設定檔
 echo -e "  → 正在從您的 GitHub 下載最新的 shottr 設定檔..."
