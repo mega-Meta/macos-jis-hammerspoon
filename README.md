@@ -3,6 +3,10 @@
 
 本專案專為 **macOS + JIS（日系硬體佈局）鍵盤** 的重度使用者量身打造。透過 Hammerspoon 的底層事件監聽、內建 `hs.chooser` 模糊搜尋引擎與 Shottr 截圖軟體的深度整合，打造出大拇指不離核心區的「單手極速操作流」。
 
+單純簡單版
+[單純簡易版連結](../../tree/original-version)
+
+
 ## 🚀 核心特色
 
 1. **徹底解決 Safari 字根散落 Bug**：採用「虛擬實體按鍵（Control + Space）」走標準 IME 廣播，在 Safari 或各類網頁表單中輸入中文字根絕對不打散。
