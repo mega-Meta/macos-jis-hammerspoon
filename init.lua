@@ -159,6 +159,7 @@ kanaTap = hs.eventtap
 			if clickCount == 1 then
 				clickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
 					setSpecificIME(CLICK_IME_ID) -- 單擊：智慧切倉頡
+					hs.alert.show("已切換預設輸入法")
 					clickCount = 0
 				end)
 			elseif clickCount == 2 then
@@ -195,6 +196,7 @@ eisuuTap = hs.eventtap
 			eisuuClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
 				if eisuuClickCount == 1 then
 					hs.keycodes.currentSourceID(ABC_IME_ID)
+					hs.alert.show("已切換英文輸入法")
 				elseif eisuuClickCount == 2 then
 					showClipboardChooser()
 				end
