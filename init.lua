@@ -120,6 +120,14 @@ local function simulateSystemImeSwitch()
 	hs.eventtap.keyStroke({ "ctrl" }, "space", 10000)
 end
 
+-- 基礎快捷鍵：手動重載設定 (⌥ + ⌘ + C)
+hs.hotkey.bind({"cmd", "alt"}, "c", function()
+    hs.alert.show("手動重載設定中...")
+    hs.timer.doAfter(0.2, function()
+        hs.reload()
+    end)
+end)
+
 -- -----------------------------------------------------------------------------
 -- 1. かな (Kana) 鍵監聽
 -- -----------------------------------------------------------------------------
