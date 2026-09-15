@@ -9,6 +9,7 @@
 --require("fn_youtube") --已預含於section9不需再載入
 --require("hs_clip2texteditor") --使用MACOS內建texteditor (使用熱鍵 cmd+opt+K) 已預含於section8不需再載入
 --require("hs_clip2vimr")  --使用需先安裝VIMR (使用熱鍵 cmd+opt+K)
+--require("auto_reload")  --測試script時開啟，程式異動時會自動執行hammerspoon reload config
 --require("hs_esp_reload") -- 使用需先安裝espanso,自定snippets
 --require("hs_clip2coteditor") --使用需先安裝coteditor(使用熱鍵 cmd+opt+M)
 
@@ -26,7 +27,7 @@ local LALT_KEY = 58
 local RALT_KEY = 61
 local YEN_KEY = 93
 local RFN_KEY = 179
-local DOUBLE_CLICK_TIMER = 0.35 -- 0.28 秒黃金判定時間，讓所有雙擊操作更輕鬆
+local DOUBLE_CLICK_TIMER = 0.35 -- 0.35 秒黃金判定時間，讓所有雙擊操作更輕鬆
 local ABC_IME_ID = "com.apple.keylayout.ABC"
 local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" -- 預設切換倉頡
 --local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
