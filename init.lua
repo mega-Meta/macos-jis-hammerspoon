@@ -6,14 +6,14 @@
 -- 已調教完成的延展scripts,請參考以下連結:
 -- https://github.com/mega-Meta/macos-jis-hammerspoon/tree/original-version
 -- ==============================================================================
---require("fn_youtube")
---require("hs_clip2texteditor") --使用MACOS內建texteditor (使用熱鍵 cmd+opt+K) 已預含不需再載入
+--require("fn_youtube") --已預含於section9不需再載入
+--require("hs_clip2texteditor") --使用MACOS內建texteditor (使用熱鍵 cmd+opt+K) 已預含於section8不需再載入
 --require("hs_clip2vimr")  --使用需先安裝VIMR (使用熱鍵 cmd+opt+K)
 --require("hs_esp_reload") -- 使用需先安裝espanso,自定snippets
 --require("hs_clip2coteditor") --使用需先安裝coteditor(使用熱鍵 cmd+opt+M)
 
 -- ==============================================================================
--- 終極修復完美版 init.lua (第一部分：核心基礎、變數與純手動輸入法切換)
+-- 終極完美簡易版 init.lua (第一部分：核心基礎、變數與純手動輸入法切換)
 -- ==============================================================================
 
 local DEBUG_FLAG = false  -- 偵錯開關，關閉為 false
@@ -41,6 +41,9 @@ local FIXED_SNIPPETS = {
 local COOLDOWN_TIME = 0.2
 local lastTriggerTime = 0
 
+-- -----------------------------------------------------------------------------
+-- 自製剪貼簿查詢功能，雙擊"英數鍵"
+-- -----------------------------------------------------------------------------
 local clipboardHistory = {}
 local MAX_CLIPBOARD_ITEMS = 10
 local lastCount = hs.pasteboard.changeCount()
@@ -181,7 +184,7 @@ eisuuTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 	return false
 end):start()
 -- -----------------------------------------------------------------------------
--- 3. 修飾鍵監聽 (雙擊 left Cmd 喚出錄影、雙擊 Option 喚出 Shottr 截圖)
+-- 3. 修飾鍵配合shottr (雙擊 left Cmd 喚出錄影、雙擊 Option 喚出 Shottr 截圖)
 -- -----------------------------------------------------------------------------
 local cmdClickCount = 0
 local cmdClickTimer = nil
@@ -226,8 +229,9 @@ modifierTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function
 	end
 	return false
 end):start()
-
--- 4. JIS 特有實體鍵監聽 (Cmd + ¥ 重複區域截圖)
+-- -----------------------------------------------------------------------------
+-- 4. JIS 特有實體鍵監聽 (Cmd + ¥ 重複區域截圖),配合shottr
+-- -----------------------------------------------------------------------------
 screenshotKeyTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 	local keyCode = event:getKeyCode()
 	local flags = event:getFlags()
@@ -237,8 +241,10 @@ screenshotKeyTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function
 	end
 	return false
 end):start()
-
+-- -----------------------------------------------------------------------------
 -- 5. App 狀態啟用監聽器
+-- -----------------------------------------------------------------------------
+--[[
 appWatcher = hs.application.watcher.new(function(appName, eventType, appObject)
 	if eventType == hs.application.watcher.activated then
 		hs.timer.doAfter(0.1, function()
@@ -251,8 +257,11 @@ appWatcher = hs.application.watcher.new(function(appName, eventType, appObject)
 		end)
 	end
 end):start()
-
+]]--
+-- -----------------------------------------------------------------------------
 -- 6. 每 3 秒 background 防護定時器
+-- -----------------------------------------------------------------------------
+--[[
 secureInputTimer = hs.timer.doEvery(3, function()
 	if not hs.eventtap.isSecureInputEnabled() then
 		if kanaTap and not kanaTap:isEnabled() then kanaTap:start() end
@@ -261,8 +270,11 @@ secureInputTimer = hs.timer.doEvery(3, function()
 		if screenshotKeyTap and not screenshotKeyTap:isEnabled() then screenshotKeyTap:start() end
 	end
 end):start()
+]]--
 
--- Debug 偵錯區
+-- -----------------------------------------------------------------------------
+-- 7. Debug 偵錯區 for hammerspoon, control by var DEBUG_FLAG
+-- -----------------------------------------------------------------------------
 keyLogger = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 	if DEBUG_FLAG then
 		local keyCode = event:getKeyCode()
@@ -279,7 +291,7 @@ testWatcher = hs.application.watcher.new(function(name, event, app)
 end):start()
 
 -- ==============================================================================
--- 7.TextEdit 一鍵安全開新檔 (系統剪貼簿直通版 - 100% 相容、支援直接 Cmd+S 另存)
+-- 8.TextEdit 一鍵安全開新檔 (系統剪貼簿直通版 - 100% 相容、支援直接 Cmd+S 另存)
 -- ==============================================================================
 
 hs.hotkey.bind({ "alt", "cmd"}, "K", function()
@@ -333,7 +345,9 @@ end)
 -- 重新宣告快捷鍵就緒
 --hs.alert.show("✨ TextEdit 已就位 (Opt+Cmd+K)", 1.5)
 
--- 8. YouTube 網頁專用智能熱鍵區
+-- -----------------------------------------------------------------------------
+-- 9. YouTube 網頁專用熱鍵區
+-- -----------------------------------------------------------------------------
 local browserApps = {
 	["YouTube"] = true,
     ["Google Chrome"] = true,
@@ -407,5 +421,8 @@ arrowTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
     return false
 end):start()
 
+-- -----------------------------------------------------------------------------
+-- END of script
+-- -----------------------------------------------------------------------------
 hs.autoLaunch(true)
 hs.alert.show("Hammerspoon 終極優化配置已啟用 📺")
