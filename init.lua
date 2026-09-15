@@ -122,9 +122,9 @@ end
 
 -- 基礎快捷鍵：手動重載設定 (⌥ + ⌘ + C)
 hs.hotkey.bind({"cmd", "alt"}, "c", function()
-    hs.alert.show("手動重載設定中...")
     hs.timer.doAfter(0.2, function()
         hs.reload()
+        hs.alert.show("手動重載設定完成。")
     end)
 end)
 
@@ -436,4 +436,4 @@ end):start()
 -- END of script
 -- -----------------------------------------------------------------------------
 hs.autoLaunch(true)
-hs.alert.show("Hammerspoon 終極優化配置已啟用 📺")
+hs.alert.show("Hammerspoon優化配置已啟用 📺")
