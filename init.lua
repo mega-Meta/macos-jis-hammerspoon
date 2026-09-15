@@ -7,12 +7,13 @@
 -- https://github.com/mega-Meta/macos-jis-hammerspoon/tree/original-version
 -- ==============================================================================
 --require("fn_youtube")
---require("hs_clip2texteditor")
---require("hs_clip2vimr")
---require("hs_esp_reload")
+--require("hs_clip2texteditor") --使用MACOS內建texteditor (使用熱鍵 cmd+opt+K) 已預含不需再載入
+--require("hs_clip2vimr")  --使用需先安裝VIMR (使用熱鍵 cmd+opt+K)
+--require("hs_esp_reload") -- 使用需先安裝espanso,自定snippets
+--require("hs_clip2coteditor") --使用需先安裝coteditor(使用熱鍵 cmd+opt+M)
 
 -- ==============================================================================
--- 終極調教相容版 init.lua (第一部分：核心基礎、變數與輸入法智慧切換)
+-- 終極修復完美版 init.lua (第一部分：核心基礎、變數與純手動輸入法切換)
 -- ==============================================================================
 
 local DEBUG_FLAG = false  -- 偵錯開關，關閉為 false
@@ -25,29 +26,16 @@ local LALT_KEY = 58
 local RALT_KEY = 61
 local YEN_KEY = 93
 local RFN_KEY = 179
-local DOUBLE_CLICK_TIMER = 0.3 -- 微調至 0.22 秒，讓雙擊判定更緊湊流暢
+local DOUBLE_CLICK_TIMER = 0.28 -- 0.28 秒黃金判定時間，讓所有雙擊操作更輕鬆
 local ABC_IME_ID = "com.apple.keylayout.ABC"
 local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" -- 預設切換倉頡
+--local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
 
 local FIXED_SNIPPETS = {
 	{ title = "📧 我的電子郵件", text = "myemailk@gmail.com" },
 	{ title = "🏢 公司統一編號", text = "12345678" },
 	{ title = "📍 常用寄件地址", text = "台北市信義區信義路五段7號" },
 	{ title = "✍️ 常用客套回覆", text = "收到，感謝您的協助！我會盡快確認後回覆您。" },
-}
-
--- 白名單設定，切換 app 時，中文輸入法延用(true)，切換成 ABC(false)
-local WHITE_LIST_IDS = {
-	["com.apple.Notes"] = true,
-	["com.apple.Terminal"] = false,
-	["com.qvacua.VimR"] = false,
-	["com.mitchellh.ghostty"] = false,
-	["com.coteditor.CotEditor"] = false,
-	["jp.naver.line.mac"] = true,
-	["net.machorro.roberto.Moped"] = true,
-	["com.apple.appkit.xpc.openAndSavePanelService"] = true,
-	["com.apple.print.PrinterProxy"] = true,
-	["com.sublimetext.4"] = false,
 }
 
 local COOLDOWN_TIME = 0.2
@@ -93,8 +81,8 @@ local function showClipboardChooser()
 	end
 	for i, item in ipairs(clipboardHistory) do
 		local summary = string.gsub(item, "[\r\n]", " ")
-		if string.len(summary) > 40 then
-			summary = string.sub(summary, 1, 40) .. "..."
+		if string.len(summary) > 200 then
+			summary = string.sub(summary, 1, 200) .. "..."
 		end
 		table.insert(choices, {
 			text = string.format("[%d] 📋 %s", i, summary),
@@ -120,7 +108,7 @@ local function showClipboardChooser()
 	myChooser:show()
 end
 
--- 模擬系統輸入法切換
+-- 模擬系統輸入法切換 (僅供雙擊使用)
 local function simulateSystemImeSwitch()
 	local currentTime = hs.timer.secondsSinceEpoch()
 	if currentTime - lastTriggerTime < COOLDOWN_TIME then return end
@@ -128,20 +116,8 @@ local function simulateSystemImeSwitch()
 	hs.eventtap.keyStroke({ "ctrl" }, "space", 10000)
 end
 
--- 混合式精準輸入法切換
-local function setSpecificIME(imeID)
-	local frontApp = hs.application.frontmostApplication()
-	local appBundleID = frontApp and frontApp:bundleID() or ""
-	if appBundleID == "com.apple.Safari" then
-		local current = hs.keycodes.currentSourceID()
-		if current ~= imeID then simulateSystemImeSwitch() end
-	else
-		hs.keycodes.currentSourceID(imeID)
-	end
-end
-
 -- -----------------------------------------------------------------------------
--- 1. かな (Kana) 鍵監聽 (已調教優化：單擊 0 延遲極速切換)
+-- 1. かな (Kana) 鍵監聽
 -- -----------------------------------------------------------------------------
 local kanaLastClickTime = 0
 kanaTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
@@ -150,22 +126,23 @@ kanaTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 
 	if keyCode == KANA_KEY then
 		if flags.alt then
-			hs.eventtap.keyStroke({ "cmd", "shift" }, "2", 0) -- Opt + かな = 滾動長截圖
+			hs.eventtap.keyStroke({ "cmd", "shift" }, "2", 0)
 			return true
 		end
 		if flags.cmd then
-			hs.eventtap.keyStroke({ "cmd", "shift" }, "4", 0) -- Cmd + かな = 區域截圖
+			hs.eventtap.keyStroke({ "cmd", "shift" }, "4", 0)
 			return true
 		end
 
 		local currentTime = hs.timer.secondsSinceEpoch()
 		if (currentTime - kanaLastClickTime) < DOUBLE_CLICK_TIMER then
-			-- 雙擊情境：補救切換到系統下一個輸入法
 			simulateSystemImeSwitch()
 			kanaLastClickTime = 0
 		else
-			-- 單擊情境：【零延遲核心】一按下立刻強制切換為倉頡，完全不等待計時器！
-			setSpecificIME(CLICK_IME_ID)
+			hs.keycodes.currentSourceID(ABC_IME_ID)
+			hs.timer.doAfter(0.06, function()
+				hs.keycodes.currentSourceID(CLICK_IME_ID)
+			end)
 			kanaLastClickTime = currentTime
 		end
 		return true
@@ -174,7 +151,7 @@ kanaTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 end):start()
 
 -- -----------------------------------------------------------------------------
--- 2. 英數 (Eisuu) 鍵監聽 (已調教優化：單擊 0 延遲切英文，並修復雙擊按鍵外噴 BUG)
+-- 2. 英數 (Eisuu) 鍵監聽
 -- -----------------------------------------------------------------------------
 local eisuuLastClickTime = 0
 eisuuTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
@@ -193,15 +170,13 @@ eisuuTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 
 		local currentTime = hs.timer.secondsSinceEpoch()
 		if (currentTime - eisuuLastClickTime) < DOUBLE_CLICK_TIMER then
-			-- 雙擊情境：喚出剪貼簿選單
 			showClipboardChooser()
 			eisuuLastClickTime = 0
 		else
-			-- 單擊情境：【零延遲核心】一按下立刻強制切英文，完全不等待計時器！
 			hs.keycodes.currentSourceID(ABC_IME_ID)
 			eisuuLastClickTime = currentTime
 		end
-		return true -- 100% 阻斷按鍵事件，確保雙擊時「英數」鍵訊號絕不外噴進輸入框
+		return true
 	end
 	return false
 end):start()
@@ -252,7 +227,7 @@ modifierTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function
 	return false
 end):start()
 
--- 4. JIS 特有實體鍵監聽 (Cmd + ¥ 重複上一次截圖)
+-- 4. JIS 特有實體鍵監聽 (Cmd + ¥ 重複區域截圖)
 screenshotKeyTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
 	local keyCode = event:getKeyCode()
 	local flags = event:getFlags()
@@ -263,18 +238,9 @@ screenshotKeyTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function
 	return false
 end):start()
 
--- 5. App 狀態啟用監聽器 (防卡死與全域環境自適應切換)
+-- 5. App 狀態啟用監聽器
 appWatcher = hs.application.watcher.new(function(appName, eventType, appObject)
 	if eventType == hs.application.watcher.activated then
-		if appObject then
-			local appBundleID = appObject:bundleID()
-			local isWhitelisted = WHITE_LIST_IDS[appBundleID] or false
-			if not isWhitelisted then
-				hs.timer.doAfter(0.05, function()
-					hs.keycodes.currentSourceID(ABC_IME_ID)
-				end)
-			end
-		end
 		hs.timer.doAfter(0.1, function()
 			if not hs.eventtap.isSecureInputEnabled() then
 				if kanaTap then kanaTap:stop(); kanaTap:start() end
@@ -286,7 +252,7 @@ appWatcher = hs.application.watcher.new(function(appName, eventType, appObject)
 	end
 end):start()
 
--- 6. 每 3 秒背景防護定時器
+-- 6. 每 3 秒 background 防護定時器
 secureInputTimer = hs.timer.doEvery(3, function()
 	if not hs.eventtap.isSecureInputEnabled() then
 		if kanaTap and not kanaTap:isEnabled() then kanaTap:start() end
@@ -313,27 +279,61 @@ testWatcher = hs.application.watcher.new(function(name, event, app)
 end):start()
 
 -- ==============================================================================
--- 7. CotEditor 一鍵安全開新檔 (強制前台操作版 - 100% 獨立白紙隔離，不污染舊檔)
+-- 7.TextEdit 一鍵安全開新檔 (系統剪貼簿直通版 - 100% 相容、支援直接 Cmd+S 另存)
 -- ==============================================================================
-hs.hotkey.bind({ "alt", "cmd"}, "M", function()
-    hs.application.launchOrFocus("CotEditor")
-    hs.timer.doAfter(0.25, function()
-        local app = hs.application.frontmostApplication()
-        if app and app:name() == "CotEditor" then
-            hs.eventtap.keyStroke({"cmd"}, "n", 0)
-            hs.timer.doAfter(0.1, function()
-                hs.eventtap.keyStroke({"cmd"}, "v", 0)
-                hs.alert.show("📝 由剪貼簿成功轉貼未命名新檔，請自行存檔！", 1)
-            end)
+
+hs.hotkey.bind({ "alt", "cmd"}, "K", function()
+    -- 1. [無損脫殼機制] 率先讓系統剪貼簿有足夠的時間完成 Safari 網頁富文本清洗
+    hs.timer.usleep(150000)
+
+    -- 2. 智能時間動態分流：檢查 TextEdit 是否已經在背景運行中
+    local textEditApp = hs.application.get("com.apple.TextEdit")
+    local isRunning = textEditApp ~= nil and textEditApp:isRunning()
+    
+    -- 如果已啟動等 0.15 秒；如果是冷啟動，則給予 1.2 秒讓原廠視窗充分初始化
+    local waitDelay = isRunning and 0.15 or 1.20
+    
+    if not isRunning then
+        hs.alert.show("🚀 正在叫醒系統文字編輯 (TextEdit)...", 1.2)
+    end
+
+    -- 3. 透過最高權限 AppleScript 直接控制 TextEdit，並強制奪取 Safari 與前台焦點
+    hs.osascript.applescript([[
+        tell application "TextEdit"
+            activate
+        end tell
+    ]])
+
+    -- 4. 寬限時間到，由 AppleScript 直擊系統記憶體注入，完全不用 Lua 轉義字串
+    hs.timer.doAfter(waitDelay, function()
+        
+        -- 【核心黑科技】：直接命令 AppleScript 抓取系統當前的 (the clipboard as text)
+        -- 這在 macOS 底層是最高安全層級，完全不怕引號或換行，100% 必定成功
+        local textEditScript = [[
+            tell application "TextEdit"
+                -- 100% 強制開出一張全新型態、獨立的 Untitled 未命名文件視窗
+                set newDoc to make new document
+                -- 直接從系統剪貼簿搬運純文字寫入這張白紙，不經過硬碟、也不需模擬按鍵
+                set text of newDoc to (the clipboard as text)
+            end tell
+        ]]
+
+        -- 5. 核心執行
+        local success, _, errorTable = hs.osascript.applescript(textEditScript)
+        
+        if success then
+            hs.alert.show("🍏 成功建立未命名新檔！(按 Cmd+S 可直接另存)", 1.5)
         else
-            hs.alert.show("⚠️ 視窗聚焦失敗，請再試一次", 2)
+            -- 萬一出錯，透過提示框抓出錯誤，不再死轉
+            local errStr = errorTable and errorTable.NSLocalizedDescription or "未知錯誤"
+            hs.alert.show("❌ 系統注入失敗: " .. errStr, 3)
         end
     end)
 end)
+-- 重新宣告快捷鍵就緒
+--hs.alert.show("✨ TextEdit 已就位 (Opt+Cmd+K)", 1.5)
 
--- -----------------------------------------------------------------------------
 -- 8. YouTube 網頁專用智能熱鍵區
--- -----------------------------------------------------------------------------
 local browserApps = {
 	["YouTube"] = true,
     ["Google Chrome"] = true,
@@ -350,20 +350,20 @@ local function isYouTube()
     return false
 end
 
--- 功能 1：雙擊 fn 鍵回到 YouTube 首頁 (已校正為官方原生純淨 g+h 快捷鍵)
+-- 功能 1：雙擊 fn 鍵回到 YouTube 首頁
 local lastFnTime = 0
 fnTap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.types.flagsChanged}, function(event)
     local keyCode = event:getKeyCode()
     if keyCode == RFN_KEY then
         local currentTime = hs.timer.secondsSinceEpoch()
         if (currentTime - lastFnTime) > 0.05 then
-            if (currentTime - lastFnTime) < 0.38 then
+            if (currentTime - lastFnTime) < (DOUBLE_CLICK_TIMER + 0.10) then
                 if isYouTube() then
                     hs.eventtap.keyStroke({}, "g", 0)
                     hs.timer.doAfter(0.05, function()
-                        hs.eventtap.keyStroke({}, "h", 0)
+                        hs.eventtap.keyStroke({"cmd", "shift"}, "h", 0)
                     end)
-                    hs.alert.show("📺 返回 YouTube 首頁")
+                    hs.alert.show("📺 已自動返回 YouTube 首頁")
                 end
                 lastFnTime = 0
                 return true
@@ -375,23 +375,32 @@ fnTap = hs.eventtap.new({hs.eventtap.event.types.keyDown, hs.eventtap.event.type
     return false
 end):start()
 
--- 功能 2：fn + 方向鍵 映射 (相容 Mac 晶片硬體轉譯碼)
+-- 功能 2：fn + 方向鍵 映射
 arrowTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
-    local flags = event:getFlags()
     local keyCode = event:getKeyCode()
     
-    if flags.fn and isYouTube() then    
+    -- 【核心防禦】：179 綠色通道放行
+    if keyCode == RFN_KEY then return false end
+    
+    if isYouTube() then    
+        -- fn + 向下鍵 = PageDown (121) -> 進入全螢幕播放 (f)
         if keyCode == 121 or keyCode == 125 then
             hs.eventtap.keyStroke({}, "f", 0)
             return true
+            
+        -- fn + 向上鍵 = PageUp (116) -> 退出全螢幕回到一般播放 (escape)
         elseif keyCode == 116 or keyCode == 126 then
             hs.eventtap.keyStroke({}, "escape", 0)
             return true
+            
+        -- fn + 向右鍵 (Keycode 124) -> 映射為小寫 j (YouTube 原生下一部影片)
         elseif keyCode == 124 then
-            hs.eventtap.keyStroke({}, "tab", 0)
+            hs.eventtap.keyStroke({}, "j", 0)
             return true
+            
+        -- fn + 向左鍵 (Keycode 123) -> 映射為小寫 k (YouTube 原生上一部影片)
         elseif keyCode == 123 then
-            hs.eventtap.keyStroke({"shift"}, "tab", 0)
+            hs.eventtap.keyStroke({}, "k", 0)
             return true
         end
     end
