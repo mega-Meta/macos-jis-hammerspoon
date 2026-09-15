@@ -10,7 +10,7 @@
 --require("hs_clip2texteditor") --使用MACOS內建texteditor (使用熱鍵 cmd+opt+K) 已預含於section8不需再載入
 --require("hs_clip2vimr")  --使用需先安裝VIMR (使用熱鍵 cmd+opt+K)
 --require("hs_esp_reload") -- 使用需先安裝espanso,自定snippets
---require("hs_clip2coteditor") --使用需先安裝coteditor(使用熱鍵 cmd+opt+M)
+require("hs_clip2coteditor") --使用需先安裝coteditor(使用熱鍵 cmd+opt+M)
 
 -- ==============================================================================
 -- 終極完美簡易版 init.lua (第一部分：核心基礎、變數與純手動輸入法切換)
