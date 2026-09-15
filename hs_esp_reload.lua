@@ -25,7 +25,11 @@ end
 
 -- 綁定快捷鍵：按下 Ctrl + Cmd + Option + Shift + R 觸發
 -- (您可以修改 {"ctrl", "cmd", "alt", "shift"} 為您喜歡的組合，例如 {"cmd", "alt", "r"})
+<<<<<<< HEAD
 hs.hotkey.bind({ "cmd" , "alt"}, "r", function()
+=======
+hs.hotkey.bind({"cmd", "alt"}, "R", function()
+>>>>>>> c6abc98da4e86063887347e285e7b8a20928937f
     reloadBothServices()
 end)
 
