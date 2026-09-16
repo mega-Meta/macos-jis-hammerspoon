@@ -29,24 +29,27 @@ local YEN_KEY = 93
 local RFN_KEY = 179
 local DOUBLE_CLICK_TIMER = 0.35 -- 0.35 秒黃金判定時間，讓所有雙擊操作更輕鬆
 local ABC_IME_ID = "com.apple.keylayout.ABC"
-local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" -- 預設切換倉頡
---local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+--local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" -- 預設切換倉頡
+local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
 
 local FIXED_SNIPPETS = {
 	{ title = "📧 我的電子郵件", text = "myemailk@gmail.com" },
 	{ title = "🏢 公司統一編號", text = "12345678" },
 	{ title = "📍 常用寄件地址", text = "台北市信義區信義路五段7號" },
 	{ title = "✍️ 常用客套回覆", text = "收到，感謝您的協助！我會盡快確認後回覆您。" },
+	{ title = "⭐️常用symbols", text = "✓✗♡⍺⍬⍵⭐️💡👍🍏⚡️🚀🔐🌐🔍️✈️📌"},
+	{ title = "⭐️常用face", text = "😀😇🥰😍😜🫠😅😂🫥😶‍🌫️😴"},
+	{ title = "MACOS", text = "⌘⇧⌃⌥⌥←→↑↓⇪⎋⏏↵⌅⇥⇤⇞⇟↖↘␣⌫⌦"},
 }
 
-local COOLDOWN_TIME = 0.2
+local COOLDOWN_TIME = 0.1
 local lastTriggerTime = 0
 
 -- -----------------------------------------------------------------------------
 -- 自製剪貼簿查詢功能，雙擊"英數鍵"
 -- -----------------------------------------------------------------------------
 local clipboardHistory = {}
-local MAX_CLIPBOARD_ITEMS = 10
+local MAX_CLIPBOARD_ITEMS = 15
 local lastCount = hs.pasteboard.changeCount()
 
 -- 剪貼簿歷史監聽器
@@ -85,8 +88,8 @@ local function showClipboardChooser()
 	end
 	for i, item in ipairs(clipboardHistory) do
 		local summary = string.gsub(item, "[\r\n]", " ")
-		if string.len(summary) > 200 then
-			summary = string.sub(summary, 1, 200) .. "..."
+		if string.len(summary) > 30 then
+			summary = string.sub(summary, 1, 30) .. "..."
 		end
 		table.insert(choices, {
 			text = string.format("[%d] 📋 %s", i, summary),
@@ -315,7 +318,7 @@ hs.hotkey.bind({ "alt", "cmd"}, "K", function()
     local waitDelay = isRunning and 0.15 or 1.20
     
     if not isRunning then
-        hs.alert.show("🚀 正在叫醒系統文字編輯 (TextEdit)...", 1.2)
+        hs.alert.show("🚀 正在啟動系統文字編輯器 (TextEdit)...", 1.2)
     end
 
     -- 3. 透過最高權限 AppleScript 直接控制 TextEdit，並強制奪取 Safari 與前台焦點
@@ -343,7 +346,7 @@ hs.hotkey.bind({ "alt", "cmd"}, "K", function()
         local success, _, errorTable = hs.osascript.applescript(textEditScript)
         
         if success then
-            hs.alert.show("🍏 成功建立未命名新檔！(按 Cmd+S 可直接另存)", 1.5)
+            hs.alert.show("🍏 成功由剪貼簿建立新檔！(請按 Cmd+S 存檔)", 1.5)
         else
             -- 萬一出錯，透過提示框抓出錯誤，不再死轉
             local errStr = errorTable and errorTable.NSLocalizedDescription or "未知錯誤"
@@ -352,7 +355,7 @@ hs.hotkey.bind({ "alt", "cmd"}, "K", function()
     end)
 end)
 -- 重新宣告快捷鍵就緒
---hs.alert.show("✨ TextEdit 已就位 (Opt+Cmd+K)", 1.5)
+--hs.alert.show("✨ TextEdit (Opt+Cmd+K) 就位，可由剪貼簿建立新檔", 1.5)
 
 -- -----------------------------------------------------------------------------
 -- 9. YouTube 網頁專用熱鍵區
