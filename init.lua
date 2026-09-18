@@ -1,22 +1,59 @@
 -- init.lua
 -- For JIS keyboard IME Switcher & Shottr Premium Full Integration
 
---[[
--- 載入名為 WindowHalfsies 的 Spoon
-hs.loadSpoon("WindowHalfsies")
-]]--
-hs.loadSpoon("WindowSigils")
-hs.loadSpoon("ClipboardTool")
-hs.loadSpoon("BrewInfo")
+-- =========================================================================
+-- 🛡️ 1. 全方位安全載入防護機制 (必須放在檔案最頂端，第 1 行！)
+-- =========================================================================
 
-require("snippets")
-require("auto_reload")
---require("hs_debug") -- show keyid & appsid on console
-require("spoon_clipboardtool")
---require("spoon_windowsigils")
-require("spoon_brewinfo")
+-- 【A. Spoons 安全載入】
+function safeLoadSpoon(spoonName)
+    local spoonPath = hs.configdir .. "/Spoons/" .. spoonName .. ".spoon"
+    local fileInfo = hs.fs.attributes(spoonPath)
+    
+    if fileInfo and fileInfo.mode == "directory" then
+        return hs.loadSpoon(spoonName)
+    else
+        local warnMsg = string.format("⚠️ 找不到 Spoons [%s] 外掛，請下載安裝！", spoonName)
+        print(warnMsg)
+        hs.alert.show(warnMsg, {strokeColor={hex="#FFAA00", alpha=1}}, 3)
+        return nil
+    end
+end
 
-local DEBUG_FLAG = false  --off is false
+-- 【B. 子模組 Require 安全載入】
+function safeRequire(moduleName)
+    -- 使用 pcall 保護調用，即使檔案不存在或內部語法有錯，也絕不崩潰卡死
+    local success, err = pcall(require, moduleName)
+    
+    if success then
+        return true
+    else
+        -- 補捉到錯誤，優雅提示
+        local warnMsg = string.format("⚠️ 模組 [%s.lua] 載入失敗！", moduleName)
+        print(warnMsg .. "\n詳細錯誤原因:\n" .. tostring(err)) -- 在 Console 印出具體是少檔案還是語法錯
+        hs.alert.show(warnMsg, {strokeColor={hex="#FF5555", alpha=1}}, 4)
+        return false
+    end
+end
+
+-- =========================================================================
+-- 🚀 2. 安全載入區 (從此免疫所有遺失檔案的崩潰)
+-- =========================================================================
+
+-- 安全載入官方 Spoons
+safeLoadSpoon("WindowSigils")
+safeLoadSpoon("ClipboardTool")
+
+
+-- ⭐️ 安全載入你的所有子模組（將 require 全部改用 safeRequire）
+safeRequire("snippets")
+safeRequire("auto_reload")
+--safeRequire("hs_debug")
+safeRequire("spoon_clipboardtool")
+-- safeRequire("spoon_windowsigils")
+
+
+--local DEBUG_FLAG = false  --off is false
 local EISUU_KEY = 102
 local KANA_KEY = 104
 local LSHIFT_KEY = 56
@@ -26,7 +63,7 @@ local LALT_KEY = 58
 local RALT_KEY = 61
 local YEN_KEY = 93
 local RFN_KEY = 179
-local DOUBLE_CLICK_TIMER = 0.35
+local DOUBLE_CLICK_TIMER = 0.3
 local ABC_IME_ID = "com.apple.keylayout.ABC"
 local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" --#倉頡
 --local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
@@ -52,7 +89,7 @@ local WHITE_LIST_IDS = {
 	["com.sublimetext.4"] = false,
 }
 
-local COOLDOWN_TIME = 0.2
+local COOLDOWN_TIME = 0.15
 local lastTriggerTime = 0
 
 local clipboardHistory = {}
@@ -88,11 +125,12 @@ end
 local clickCount = 0
 local clickTimer = nil
 --local DOUBLE_CLICK_TIMEOUT = 0.50
-
+local masks = hs.eventtap.event.rawFlagMasks
 kanaTap = hs.eventtap
 	.new({ hs.eventtap.event.types.keyDown }, function(event)
 		local keyCode = event:getKeyCode()
 		local flags = event:getFlags()
+		local rawFlags = event:rawFlags()
 
 		if keyCode == KANA_KEY then
 			if flags.alt then
@@ -101,10 +139,14 @@ kanaTap = hs.eventtap
 			end
 
 			if flags.cmd then
-				hs.eventtap.keyStroke({ "cmd", "shift" }, "4", 0) -- Cmd + かな = 區域截圖
+				if (rawFlags & masks.deviceRightCommand) ~= 0  then
+					hs.eventtap.keyStroke({ "cmd", "shift" }, "7", 0) -- right Cmd + かな = repeat area screen
+				else
+					hs.eventtap.keyStroke({ "cmd", "shift" }, "4", 0) -- left Cmd + かな = 區域截圖
+				end
 				return true
 			end
-
+			
 			if clickTimer then
 				clickTimer:stop()
 			end
@@ -113,10 +155,11 @@ kanaTap = hs.eventtap
 			if clickCount == 1 then
 				clickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
 					setSpecificIME(CLICK_IME_ID) -- 單擊：智慧切倉頡
+				    --hs.alert.show("中文輸入法切換成功")
 					clickCount = 0
 				end)
 			elseif clickCount == 2 then
-				simulateSystemImeSwitch() -- 雙擊：系統切換下一個
+				simulateSystemImeSwitch() -- 雙擊：系統切換下一個輸入法
 				clickCount = 0
 			end
 			return true
@@ -126,7 +169,7 @@ kanaTap = hs.eventtap
 	:start()
 
 -- =========================================================================
--- 2. 英數 (Eisuu) 鍵監聽：【終極修復版】支援單擊、雙擊、按住當組合鍵
+-- 2. 英數 (Eisuu) 鍵監聽：支援單擊、雙擊、按住當組合鍵
 -- =========================================================================
 local eisuuClickCount = 0
 local eisuuClickTimer = nil
@@ -147,11 +190,11 @@ eisuuTap = hs.eventtap.new({
             
             -- 保留你原本的 Shottr 快捷鍵整合 (Opt/Cmd + 英數)
             if flags.alt then
-                hs.eventtap.keyStroke({ "cmd", "shift" }, "1", 0)
+                hs.eventtap.keyStroke({ "cmd", "shift" }, "1", 0) -- alt + eisuu = shottr active window
                 return true
             end
             if flags.cmd then
-                hs.eventtap.keyStroke({ "cmd", "shift" }, "3", 0)
+                hs.eventtap.keyStroke({ "cmd", "shift" }, "3", 0) -- cmd + eisuu - shottr area screen
                 return true
             end
             
@@ -178,36 +221,52 @@ eisuuTap = hs.eventtap.new({
         return true -- 100% 攔截英數鍵，不讓它干擾系統
     end
 
-    -- 【情況 B】：當「英數鍵正被按住不放」，且按下了其他按鍵時 $\rightarrow$ 觸發組合鍵！
+        -- 【情況 B】：當「英數鍵正被按住不放」，且按下了其他按鍵時 -> 觸發組合鍵！
     if isEisuuPressed and eventType == hs.eventtap.event.types.keyDown then
         local char = hs.keycodes.map[keyCode]
         
         -- 🌟 核心功能：英數 + C (C 的 Keycode 確定是 8)
-        if char == "v" or keyCode == 9 then
-            eisuuClickCount = 0 -- 關鍵：歸零計數，防止放開英數鍵時誤切換輸入法
+        if keyCode == 8 then
+            eisuuClickCount = 0
             
-            hs.alert.show("執行：全選 ➔ 貼上 ➔ 儲存 💾")
+            -- 💡 關鍵防護：先暫停監聽，防止自己發送的 Cmd+A/Cmd+C 觸發死迴圈
+            eisuuTap:stop()
             
-            -- 執行全選貼上儲存
             hs.eventtap.keyStroke({ "cmd" }, "a", 0) -- 1. 全選
+            hs.timer.doAfter(0.01, function()
+                hs.eventtap.keyStroke({ "cmd" }, "c", 0) -- 2. 複製
+            end)
+            -- 執行完畢，重新啟動監聽器
+            eisuuTap:start()
+          
+            return true
+        end
+
+        -- 🌟 核心功能：英數 + V (V 的 Keycode 確定是 9)
+        if keyCode == 9 then
+            eisuuClickCount = 0
             
+            -- 💡 關鍵防護：先暫停監聽，防止自己發送的 Cmd+A 觸發下方的「英數+A」
+            eisuuTap:stop()
+            
+            hs.eventtap.keyStroke({ "cmd" }, "a", 0) -- 1. 全選
             hs.timer.doAfter(0.01, function()
                 hs.eventtap.keyStroke({ "cmd" }, "v", 0) -- 2. 貼上
-                
-                hs.timer.doAfter(0.01, function()
-                    hs.eventtap.keyStroke({ "cmd" }, "s", 0) -- 3. 儲存
-                end)
             end)
-            return true -- 吞掉這個按鍵，絕對不會在螢幕上打出 "v" 或中文字
+            -- 執行完畢，重新啟動監聽器
+            eisuuTap:start()
+            return true
         end
         
+       
         -- 🌟 核心功能：英數 + A (A 的 Keycode 是 0)
-        if char == "a" or keyCode == 0 then
+        if keyCode == 0 then
             eisuuClickCount = 0
-            hs.alert.show("觸發了：英數 + A 組合鍵！")
+            hs.alert.show("測試觸發了：英數 + A 組合鍵！")
             return true
         end
     end
+
 
     return false -- 其他一般打字 100% 正常放行，絕不卡死
 end):start()
@@ -230,8 +289,27 @@ modifierTap = hs.eventtap
 			return true
 		end
 
-		-- 情境 B：單獨雙擊 left Cmd 鍵 $\rightarrow$ 喚出工具列 (Cmd+Shift+5)
-		if keyCode == LCMD_KEY or keyCode == RCMD_KEY then
+		-- 情境 B1：單獨雙擊 left Cmd 鍵 喚出工具列 (Cmd+Shift+0) shottr cupture any windows
+		if keyCode == LCMD_KEY then --or keyCode == RCMD_KEY then
+			if flags.cmd and not flags.shift and not flags.ctrl and not flags.alt then
+				if cmdClickTimer then
+					cmdClickTimer:stop()
+				end
+				cmdClickCount = cmdClickCount + 1
+				if cmdClickCount == 1 then
+					cmdClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
+						cmdClickCount = 0
+					end)
+				elseif cmdClickCount == 2 then
+					cmdClickCount = 0
+					hs.eventtap.keyStroke({ "cmd", "shift" }, "0", 0)
+					return true
+				end
+			end
+		end
+
+		-- 情境 B2：單獨雙擊 right Cmd 鍵 喚出工具列 (Cmd+Shift+5) macos screen cupture main screen
+		if keyCode == RCMD_KEY then
 			if flags.cmd and not flags.shift and not flags.ctrl and not flags.alt then
 				if cmdClickTimer then
 					cmdClickTimer:stop()
@@ -249,28 +327,8 @@ modifierTap = hs.eventtap
 			end
 		end
 
-		-- 情境 B2：單獨雙擊 right Cmd 鍵 $\rightarrow$ 喚出工具列 (Cmd+Shift+H) for youtube show Home
-		--[[
-		if keyCode == RCMD_KEY then
-			if flags.cmd and not flags.shift and not flags.ctrl and not flags.alt then
-				if cmdClickTimer then
-					cmdClickTimer:stop()
-				end
-				cmdClickCount = cmdClickCount + 1
-				if cmdClickCount == 1 then
-					cmdClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function()
-						cmdClickCount = 0
-					end)
-				elseif cmdClickCount == 2 then
-					cmdClickCount = 0
-					hs.eventtap.keyStroke({ "cmd", "shift" }, "H", 0)
-					return true
-				end
-			end
-		end
-		]]--
 
-		-- 🌟 情境 C【全新新增】：單獨雙擊 Option 鍵 $\rightarrow$ 觸發 Shottr 功能 (Cmd+Shift+8)
+		-- 🌟 情境 C【全新新增】：單獨雙擊 Option 鍵 觸發 Shottr 功能 (Cmd+Shift+8) show shottr view and editor
 		if keyCode == LALT_KEY or keyCode == RALT_KEY then
 			-- 當按下 Option，且此時沒有混雜其他的修飾鍵 (如 Cmd、Shift、Ctrl)
 			if flags.alt and not flags.cmd and not flags.shift and not flags.ctrl then
@@ -300,13 +358,13 @@ screenshotKeyTap = hs.eventtap
 		local keyCode = event:getKeyCode()
 		local flags = event:getFlags()
 
-		if keyCode == YEN_KEY and flags.cmd then
-			hs.eventtap.keyStroke({ "cmd", "shift" }, "7", 0) -- Cmd + ¥ = 重複上一次截圖
-			return true
-		end
+		--if keyCode == YEN_KEY and flags.cmd then
+		--	hs.eventtap.keyStroke({ "cmd", "shift" }, "7", 0) -- Cmd + ¥ = 重複上一次截圖
+		--	return true
+		--end
 
 		if keyCode == RFN_KEY then
-		  hs.eventtap.keyStroke({ "cmd", "shift" }, "H", 0) -- Cmd + ¥ = 重複上一次截圖
+		  hs.eventtap.keyStroke({ "cmd", "shift" }, "H", 0) -- youtube go to homepage
 			return true
 		end
 
@@ -370,20 +428,6 @@ secureInputTimer = hs.timer.doEvery(3, function()
 end)
 :start()
 
--- 	⭐️ 穩定的寫法：加入唯一的識別名稱，讓 macOS 記住它的位置
---myMenu = hs.menubar.new(true, "myUniqueHammerspoonMenuName")
-
--- 💡 改良版：延遲 0.2 秒再重載，防止選單列圖示變成空白
---[[
-hs.hotkey.bind({"cmd", "alt"}, "C", function()
-    --hs.alert.show("正在重載設定...")
-    hs.timer.doAfter(0.2, function()
-        hs.reload()
-    end)
-    
-end)
-:start()
-]]--
 -- 每次載入設定時，自動清空 Console 視窗
 hs.console.clearConsole()
 
