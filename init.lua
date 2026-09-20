@@ -12,7 +12,8 @@
 --require("auto_reload")  --測試script時開啟，程式異動時會自動執行hammerspoon reload config
 --require("hs_esp_reload") -- 使用需先安裝espanso,自定snippets
 --require("hs_clip2coteditor") --使用需先安裝coteditor(使用熱鍵 cmd+opt+M)
-
+--local spoonsMgr = require("hs_spoonsmgr")
+--require("text_conversion")
 -- ==============================================================================
 -- 終極完美簡易版 init.lua (第一部分：核心基礎、變數與純手動輸入法切換)
 -- ==============================================================================
@@ -29,8 +30,8 @@ local YEN_KEY = 93
 local RFN_KEY = 179
 local DOUBLE_CLICK_TIMER = 0.35 -- 0.35 秒黃金判定時間，讓所有雙擊操作更輕鬆
 local ABC_IME_ID = "com.apple.keylayout.ABC"
---local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" -- 預設切換倉頡
-local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
+local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Cangjie" -- 預設切換倉頡
+--local CLICK_IME_ID = "com.apple.inputmethod.TCIM.Zhuyin" --#繁體倚天注音
 
 local FIXED_SNIPPETS = {
 	{ title = "📧 我的電子郵件", text = "myemailk@gmail.com" },
@@ -127,12 +128,13 @@ end
 hs.hotkey.bind({"cmd", "alt"}, "c", function()
     hs.timer.doAfter(0.2, function()
         hs.reload()
-        hs.alert.show("手動重載設定完成。")
+        --hs.alert.show("👍Hammerspoon手動重載完成。")
     end)
 end)
 
 -- -----------------------------------------------------------------------------
 -- 1. かな (Kana) 鍵監聽
+-- cmd+kana
 -- -----------------------------------------------------------------------------
 local kanaLastClickTime = 0
 kanaTap = hs.eventtap.new({ hs.eventtap.event.types.keyDown }, function(event)
@@ -202,17 +204,21 @@ local cmdClickCount = 0
 local cmdClickTimer = nil
 local altClickCount = 0
 local altClickTimer = nil
+local masks = hs.eventtap.event.rawFlagMasks
 
 modifierTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(event)
 	local keyCode = event:getKeyCode()
 	local flags = event:getFlags()
+	local rawflags = event:rawFlags()
+	--local masks = event:rawFlagMasks
 
-	if keyCode == LSHIFT_KEY and flags.shift and flags.cmd then
+	if keyCode == LSHIFT_KEY and flags.shift and flags.cmd  then
+	--if flags.shift and flags.cmd  then
 		simulateSystemImeSwitch()
 		return true
 	end
 
-	if keyCode == LCMD_KEY or keyCode == RCMD_KEY then
+	if keyCode == LCMD_KEY then -- or keyCode == RCMD_KEY then
 		if flags.cmd and not flags.shift and not flags.ctrl and not flags.alt then
 			if cmdClickTimer then cmdClickTimer:stop() end
 			cmdClickCount = cmdClickCount + 1
@@ -225,8 +231,22 @@ modifierTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function
 			end
 		end
 	end
-
-	if keyCode == LALT_KEY or keyCode == RALT_KEY then
+	-- double click right cmd-> cmd +shift + 0 = screeeshot for any selected window
+	if (rawflags & masks.deviceRightCommand) ~= 0 then
+		if flags.cmd and not flags.shift and not flags.ctrl and not flags.alt then
+			if cmdClickTimer then cmdClickTimer:stop() end
+			cmdClickCount = cmdClickCount + 1
+			if cmdClickCount == 1 then
+				cmdClickTimer = hs.timer.doAfter(DOUBLE_CLICK_TIMER, function() cmdClickCount = 0 end)
+			elseif cmdClickCount == 2 then
+				cmdClickCount = 0
+				hs.eventtap.keyStroke({ "cmd", "shift" }, "0", 0)
+				return true
+			end
+		end
+	end
+    
+    if keyCode == LALT_KEY or keyCode == RALT_KEY then
 		if flags.alt and not flags.cmd and not flags.shift and not flags.ctrl then
 			if altClickTimer then altClickTimer:stop() end
 			altClickCount = altClickCount + 1
@@ -436,7 +456,31 @@ arrowTap = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(event)
 end):start()
 
 -- -----------------------------------------------------------------------------
+-- macOS「服務」文字轉換熱鍵
+-- 先在「系統設定 → 鍵盤 → 鍵盤快速鍵 → 服務 → 文字」啓用下列服務：
+--   將文字轉換為繁體中文（⌃⇧⌘C）
+--   將文字轉換為簡體中文（⌃⌥⇧⌘C）
+-- -----------------------------------------------------------------------------
+hs.hotkey.bind({ "ctrl", "shift" }, "T", function()
+  hs.eventtap.keyStroke({ "cmd" }, "a", 0)
+  hs.timer.doAfter(0.05, function()
+    hs.eventtap.keyStroke({ "ctrl", "shift", "cmd" }, "C", 0)
+    hs.alert.show("將文字轉換為繁體中文")
+  end)
+end)
+
+hs.hotkey.bind({ "ctrl", "shift" }, "S", function()
+  hs.eventtap.keyStroke({ "cmd" }, "a", 0)
+  hs.timer.doAfter(0.05, function()
+    hs.eventtap.keyStroke({ "ctrl", "alt", "shift", "cmd" }, "C", 0)
+    hs.alert.show("將文字轉換為簡體中文")
+  end)
+end)
+
+-- -----------------------------------------------------------------------------
 -- END of script
 -- -----------------------------------------------------------------------------
 hs.autoLaunch(true)
+-- 每次載入設定時，自動清空 Console 視窗
+hs.console.clearConsole()
 hs.alert.show("Hammerspoon優化配置已啟用 📺")
