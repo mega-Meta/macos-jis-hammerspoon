@@ -41,7 +41,7 @@ end
 -- =========================================================================
 
 -- 安全載入官方 Spoons
-safeLoadSpoon("WindowSigils")
+--safeLoadSpoon("WindowSigils")
 safeLoadSpoon("ClipboardTool")
 
 
@@ -52,8 +52,7 @@ safeRequire("auto_reload")
 safeRequire("spoon_clipboardtool")
 -- safeRequire("spoon_windowsigils")
 
-
---local DEBUG_FLAG = false  --off is false
+local DEBUG_FLAG = false  --off is false
 local EISUU_KEY = 102
 local KANA_KEY = 104
 local LSHIFT_KEY = 56
@@ -121,27 +120,34 @@ local function setSpecificIME(imeID)
 	end
 end
 
--- 1. かな 鍵監聽 (包含輸入法切換、Cmd+かな區域截圖、Opt+かな滾動長截圖)
+-- =========================================================================
+-- 1. KANA かな 鍵監聽 (包含輸入法切換、Cmd+かな區域截圖、Opt+かな滾動長截圖)
+-- =========================================================================
 local clickCount = 0
 local clickTimer = nil
 --local DOUBLE_CLICK_TIMEOUT = 0.50
 local masks = hs.eventtap.event.rawFlagMasks
-kanaTap = hs.eventtap
-	.new({ hs.eventtap.event.types.keyDown }, function(event)
+
+kanaTap = hs.eventtap.new({
+	 hs.eventtap.event.types.keyDown -- , hs.eventtap.event.types.keyUp
+	  }, function(event)
 		local keyCode = event:getKeyCode()
 		local flags = event:getFlags()
 		local rawFlags = event:rawFlags()
 
 		if keyCode == KANA_KEY then
 			if flags.alt then
+				if DEBUG_FLAG then hs.alert.show("option+kana") end
 				hs.eventtap.keyStroke({ "cmd", "shift" }, "2", 0) -- Opt + かな = 滾動長截圖
 				return true
 			end
-
-			if flags.cmd then
-				if (rawFlags & masks.deviceRightCommand) ~= 0  then
+            --hs.alert.show(rawFlags, "|" , masks.deviceRightCommand)
+			if flags.cmd  then
+				if (rawFlags & masks.deviceRightCommand) ~= 0  then --right cmd
+					if DEBUG_FLAG then hs.alert.show("right cmd+kana") end
 					hs.eventtap.keyStroke({ "cmd", "shift" }, "7", 0) -- right Cmd + かな = repeat area screen
-				else
+				else     --left cmd
+				    if DEBUG_FLAG then hs.alert.show("left cmd+kana") end
 					hs.eventtap.keyStroke({ "cmd", "shift" }, "4", 0) -- left Cmd + かな = 區域截圖
 				end
 				return true
@@ -166,7 +172,7 @@ kanaTap = hs.eventtap
 		end
 		return false
 	end)
-	:start()
+:start()
 
 -- =========================================================================
 -- 2. 英數 (Eisuu) 鍵監聽：支援單擊、雙擊、按住當組合鍵
@@ -174,14 +180,15 @@ kanaTap = hs.eventtap
 local eisuuClickCount = 0
 local eisuuClickTimer = nil
 local isEisuuPressed = false  -- 💡 精確追蹤英數鍵是否正被按住不放
+local masks = hs.eventtap.event.rawFlagMasks
 
 eisuuTap = hs.eventtap.new({
-    hs.eventtap.event.types.keyDown,
-    hs.eventtap.event.types.keyUp
-}, function(event)
+    hs.eventtap.event.types.keyDown --,hs.eventtap.event.types.keyUp
+    }, function(event)
     local keyCode = event:getKeyCode()
     local flags = event:getFlags()
     local eventType = event:getType() -- 💡 正確獲取目前是按下還是放開
+    local rawFlags = event:rawFlags()
 
     -- 【情況 A】：當操作的按鍵是「英數鍵」本身
     if keyCode == EISUU_KEY then
@@ -190,12 +197,20 @@ eisuuTap = hs.eventtap.new({
             
             -- 保留你原本的 Shottr 快捷鍵整合 (Opt/Cmd + 英數)
             if flags.alt then
+            	if DEBUG_FLAG then hs.alert.show("option+eisuu") end
                 hs.eventtap.keyStroke({ "cmd", "shift" }, "1", 0) -- alt + eisuu = shottr active window
                 return true
             end
+            
             if flags.cmd then
-                hs.eventtap.keyStroke({ "cmd", "shift" }, "3", 0) -- cmd + eisuu - shottr area screen
-                return true
+               if (rawFlags & masks.deviceRightCommand) ~= 0 then   --right cmd
+                  if DEBUG_FLAG then hs.alert.show("right cmd+eisuu") end
+                  hs.eventtap.keyStroke({ "cmd", "shift" }, "7", 0) -- right Cmd + かな = repeat area screen
+               else         -- left cmd
+               	  if DEBUG_FLAG then hs.alert.show("left cmd+eisuu") end
+                  hs.eventtap.keyStroke({ "cmd", "shift" }, "3", 0) -- cmd + eisuu - shottr area screen
+               end
+               return true
             end
             
             if eisuuClickTimer then eisuuClickTimer:stop() end
@@ -258,7 +273,6 @@ eisuuTap = hs.eventtap.new({
             return true
         end
         
-       
         -- 🌟 核心功能：英數 + A (A 的 Keycode 是 0)
         if keyCode == 0 then
             eisuuClickCount = 0
@@ -266,20 +280,21 @@ eisuuTap = hs.eventtap.new({
             return true
         end
     end
-
-
     return false -- 其他一般打字 100% 正常放行，絕不卡死
-end):start()
+ end)
+:start()
 
-
--- 3. 修飾鍵監聽 (Cmd+LShift切換、雙擊Cmd工具列、🌟新增：雙擊Option自訂截圖)
+-- =========================================================================
+-- 3. 修飾鍵監聽(cmd/option/shift/ctrl) (Cmd+LShift切換、雙擊Cmd工具列、🌟新增：雙擊Option自訂截圖)
+-- =========================================================================
 local cmdClickCount = 0
 local cmdClickTimer = nil
 local altClickCount = 0
 local altClickTimer = nil
 
-modifierTap = hs.eventtap
-	.new({ hs.eventtap.event.types.flagsChanged }, function(event)
+modifierTap = hs.eventtap.new({
+      hs.eventtap.event.types.flagsChanged
+      }, function(event)
 		local keyCode = event:getKeyCode()
 		local flags = event:getFlags()
 
@@ -288,7 +303,7 @@ modifierTap = hs.eventtap
 			simulateSystemImeSwitch()
 			return true
 		end
-
+		
 		-- 情境 B1：單獨雙擊 left Cmd 鍵 喚出工具列 (Cmd+Shift+0) shottr cupture any windows
 		if keyCode == LCMD_KEY then --or keyCode == RCMD_KEY then
 			if flags.cmd and not flags.shift and not flags.ctrl and not flags.alt then
@@ -350,11 +365,14 @@ modifierTap = hs.eventtap
 
 		return false
 	end)
-	:start()
+:start()
 
--- 4. JIS 特有實體鍵監聽 (包含：Cmd + ¥ 重複區域截圖)
-screenshotKeyTap = hs.eventtap
-	.new({ hs.eventtap.event.types.keyDown }, function(event)
+-- =========================================================================
+-- 4. JIS 特有實體鍵監聽 (包含：Cmd + ¥ 重複區域截圖
+-- =========================================================================
+screenshotKeyTap = hs.eventtap.new({
+     hs.eventtap.event.types.keyDown
+     }, function(event)
 		local keyCode = event:getKeyCode()
 		local flags = event:getFlags()
 
@@ -370,11 +388,13 @@ screenshotKeyTap = hs.eventtap
 
 		return false
 	end)
-	:start()
+:start()
 
+-- =========================================================================
 -- 5. App 監聽器
-appWatcher = hs.application.watcher
-	.new(function(appName, eventType, appObject)
+-- =========================================================================
+appWatcher = hs.application.watcher.new(
+     function(appName, eventType, appObject)
 		if eventType == hs.application.watcher.activated then
 			if appObject then
 				local appBundleID = appObject:bundleID()
@@ -407,7 +427,7 @@ appWatcher = hs.application.watcher
 			end)
 		end
 	end)
-	:start()
+:start()
 
 -- 6. 每 3 秒背景防護（防卡死）
 secureInputTimer = hs.timer.doEvery(3, function()
@@ -427,6 +447,13 @@ secureInputTimer = hs.timer.doEvery(3, function()
 	end
 end)
 :start()
+
+-- ==============================================================================
+-- 電池保護充電控制，預設30～85，以下可適需要調整
+-- ==============================================================================
+lowBatteryPercentage = 30
+topBatteryPercentage = 82
+require("hs_battery")
 
 -- 每次載入設定時，自動清空 Console 視窗
 hs.console.clearConsole()
