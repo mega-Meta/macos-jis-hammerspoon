@@ -45,7 +45,7 @@
 ## 🛠️ 一鍵安裝自動化腳本 install.sh
 ### 下載及執行 install.sh (開啟Terminal,複製貼上以下命令)
    ```bash
-   /bin/bash -c "$(curl -fsSL [https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/original-version/install.sh]"
+/bin/bash -c "$(curl -fsSL [https://github.com/mega-Meta/macos-jis-hammerspoon/raw/refs/heads/original-version/install.sh]"
    ```
 ### 腳本會自動完成所有繁瑣的步驟：檢查並安裝 Homebrew 軟體管理工具、自動安裝 Hammerspoon 與 Shottr、自動建立設定目錄、從您的 GitHub 倉庫下載最新代碼、並引導使用者開啟 macOS 系統權限。
 
@@ -56,11 +56,13 @@
 ### 第一步：安裝必備軟體
 
 1. **Hammerspoon**：
+   
    ```bash
    brew install --cask hammerspoon
    ```
 2. **Shottr**：
    前往官網 [https://shottr.cc](https://shottr.cc) 下載安裝，或使用 Homebrew：
+   
    ```bash
    brew install --cask shottr
    ```
@@ -105,6 +107,7 @@
 
 ### 1. 修改固定常用字串
 打開 `init.lua`，直接編輯最上方的 `FIXED_SNIPPETS` 陣列，即可無限自由延伸你的固定罐頭訊息或常用資料：
+
 ```lua
 local FIXED_SNIPPETS = {
     { title = "📧 我的電子郵件",  text = "your_email@gmail.com" },
